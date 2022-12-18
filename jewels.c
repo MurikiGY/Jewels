@@ -1,13 +1,20 @@
+#include <allegro5/display.h>
+#include <allegro5/events.h>
+#include <allegro5/mouse.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <math.h>
 #include <allegro5/allegro5.h>
+#include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_font.h>
-#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_image.h>
 
-void must_init(bool test, const char *description){
+#define DISPLAY_W 1200
+#define DISPLAY_H 650
+#define FPS 60
 
+//Função de inicialização
+void must_init(bool test, const char *description)
+{
   if(test) return;
 
   printf("couldn't initialize %s\n", description);
@@ -16,127 +23,63 @@ void must_init(bool test, const char *description){
 
 int main()
 {
-  //Inicia alegro, teclado e mouse
+    //Inicializa allegro, teclado, mouse e Imagens
   must_init(al_init(), "allegro");
   must_init(al_install_keyboard(), "keyboard");
   must_init(al_install_mouse(), "mouse");
+  must_init(al_init_image_addon(), "image addon");
+  must_init(al_init_font_addon(), "font addon");
+  must_init(al_init_ttf_addon(), "ttf_addon");
 
+  al_set_new_display_flags(ALLEGRO_NOFRAME);
 
-
-
-
-  ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
+  //Inicializa temporizador, eventos, display e fonte
+  ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
   must_init(timer, "timer");
-
   ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
   must_init(queue, "queue");
-
-  al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
-  al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
-  al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
-
-  ALLEGRO_DISPLAY* disp = al_create_display(640, 480);
+  ALLEGRO_DISPLAY* disp = al_create_display(DISPLAY_W, DISPLAY_H);
   must_init(disp, "display");
-
-  ALLEGRO_FONT* font = al_create_builtin_font();
+  al_set_window_title(disp, "JEWELS");
+  ALLEGRO_FONT* font = al_load_font("resources/Unique.ttf", 36, NULL);
   must_init(font, "font");
 
-  must_init(al_init_primitives_addon(), "primitives");
-
+  //Sinalizadores de eventos
   al_register_event_source(queue, al_get_keyboard_event_source());
   al_register_event_source(queue, al_get_mouse_event_source());
   al_register_event_source(queue, al_get_display_event_source(disp));
   al_register_event_source(queue, al_get_timer_event_source(timer));
 
-  al_hide_mouse_cursor(disp);
-
-
-  bool done = false;
-  bool redraw = true;
-  ALLEGRO_EVENT event;
-
-  float x = 100, y = 100;
-
-  float dx = 0, dy = 0;
-
-
-#define KEY_SEEN     1
-#define KEY_RELEASED 2
-
-  unsigned char key[ALLEGRO_KEY_MAX];
-  memset(key, 0, sizeof(key));
-
+  bool done = false;    //Booleano de execução
+  bool redraw = true;   //flush do display
+  ALLEGRO_EVENT event;  //Sinalizador de evento
 
   al_start_timer(timer);
   while(1)
   {
-    al_wait_for_event(queue, &event);
-
+    al_wait_for_event(queue, &event);   //Espera por um evento
     switch(event.type)
     {
       case ALLEGRO_EVENT_TIMER:
-        if(key[ALLEGRO_KEY_ESCAPE])
-          done = true;
-
-        x += dx;
-        y += dy;
-
-        if(x < 0)
-        {
-          x *= -1;
-          dx *= -1;
-        }
-        if(x > 640)
-        {
-          x -= (x - 640) * 2;
-          dx *= -1;
-        }
-        if(y < 0)
-        {
-          y *= -1;
-          dy *= -1;
-        }
-        if(y > 480)
-        {
-          y -= (y - 480) * 2;
-          dy *= -1;
-        }
-
-        dx *= 0.9;
-        dy *= 0.9;
-
-        for(int i = 0; i < ALLEGRO_KEY_MAX; i++)
-          key[i] &= KEY_SEEN;
-
+        // game logic goes here.
         redraw = true;
         break;
 
-      case ALLEGRO_EVENT_MOUSE_AXES:
-        dx += event.mouse.dx * 0.1;
-        dy += event.mouse.dy * 0.1;
-        al_set_mouse_xy(disp, 320, 240);
-        break;
-
       case ALLEGRO_EVENT_KEY_DOWN:
-        key[event.keyboard.keycode] = KEY_SEEN | KEY_RELEASED;
-        break;
-      case ALLEGRO_EVENT_KEY_UP:
-        key[event.keyboard.keycode] &= KEY_RELEASED;
-        break;
-
       case ALLEGRO_EVENT_DISPLAY_CLOSE:
         done = true;
         break;
     }
 
+    //Termina o jogo
     if(done)
       break;
 
+    //Renderiza
     if(redraw && al_is_event_queue_empty(queue))
     {
       al_clear_to_color(al_map_rgb(0, 0, 0));
-      al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", x, y);
-      al_draw_filled_rectangle(x, y, x + 10, y + 10, al_map_rgb(255, 0, 0));
+      al_draw_text(font, al_map_rgb(255, 255, 255), 500, 25, 0, "!! JEWELS !!");
 
       al_flip_display();
 
@@ -144,6 +87,7 @@ int main()
     }
   }
 
+  //Destroi o jogo
   al_destroy_font(font);
   al_destroy_display(disp);
   al_destroy_timer(timer);
