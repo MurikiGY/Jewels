@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <allegro5/allegro5.h>
 #include <allegro5/events.h>
 #include <allegro5/mouse.h>
@@ -9,8 +10,8 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
 
-#define DISPLAY_W 1200
-#define DISPLAY_H 700
+#define DISPLAY_W 1100
+#define DISPLAY_H 600
 #define FPS 60
 
 //Função de inicialização
@@ -22,8 +23,17 @@ void must_init(bool test, const char *description)
   exit(1);
 }
 
+/* Retorna um valor aleatorio entre ini e fim */
+int aleat (int ini, int fim){
+    return ini + (rand() % (fim - ini + 1));
+}
+
+
 int main()
 {
+    srand(time(NULL));    //Raiz aleatoria
+
+  //-------------------- Inicia allegro ---------------------//
   //Inicializa allegro, teclado, mouse e Imagens
   must_init(al_init(), "allegro");
   must_init(al_install_keyboard(), "keyboard");
@@ -53,12 +63,14 @@ int main()
   al_register_event_source(queue, al_get_display_event_source(disp));
   al_register_event_source(queue, al_get_timer_event_source(timer));
 
-  bool done = false;    //Booleano de execução
+  //--------------------------- Inicia Allegro -------------------------//
+
+  bool done = false;    //Fim de jogo?
   bool redraw = true;   //flush do display
   ALLEGRO_EVENT event;  //Sinalizador de evento
 
   //Variaveis de estado
-  bool inside = false;
+  int x = 10, y = 10;   //Retangulo
 
   al_start_timer(timer);
   while(1)
@@ -69,26 +81,21 @@ int main()
     {
       //Tempo de um frame
       case ALLEGRO_EVENT_TIMER:
+        if (y < DISPLAY_H - 10)
+          y++;
         redraw = true;
         break;
 
       //O mouse foi movimentado
       case ALLEGRO_EVENT_MOUSE_AXES:
-        if (!((event.mouse.x >= 10) && (event.mouse.x <= 1190) &&
-            (event.mouse.y >= 70) && (event.mouse.y <= 690)))
-          inside = false;
         break;
 
       case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
-        if ((event.mouse.x >= 10) && (event.mouse.x <= 1190) &&
-            (event.mouse.y >= 70) && (event.mouse.y <= 690))
-          inside = true;
+        x = event.mouse.x;
+        y = event.mouse.y;
         break;
 
       case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
-        if ((event.mouse.x >= 10) && (event.mouse.x <= 1190) &&
-            (event.mouse.y >= 70) && (event.mouse.y <= 690))
-          inside = false;
         break;
 
       //Uma tecla do teclado foi pressionada
@@ -110,10 +117,7 @@ int main()
       al_clear_to_color(al_map_rgb(0, 0, 0));
       al_draw_text(font, al_map_rgb(255, 255, 255), 25, 12, 0, "!! JEWELS !!");
 
-      if (inside)
-        al_draw_filled_rectangle(10, 70, 1190, 690, al_map_rgba_f(255, 255, 255, 255));
-      else
-        al_draw_filled_rectangle(10, 70, 1190, 690, al_map_rgba_f(0, 0, 0.5, 0.5));
+      al_draw_filled_rectangle(x, y, x+50, y+10, al_map_rgba_f(0, 0, 0.5, 0.5));
 
       //Commita imagem
       al_flip_display();
