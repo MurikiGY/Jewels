@@ -1,6 +1,10 @@
+#include <allegro5/bitmap.h>
+#include <allegro5/keycodes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <allegro5/color.h>
+#include <allegro5/mouse_cursor.h>
 #include <allegro5/allegro5.h>
 #include <allegro5/events.h>
 #include <allegro5/mouse.h>
@@ -31,9 +35,9 @@ int aleat (int ini, int fim){
 
 int main()
 {
-    srand(time(NULL));    //Raiz aleatoria
+  srand(time(NULL));    //Raiz aleatoria
 
-  //-------------------- Inicia allegro ---------------------//
+  //--------------------------- Inicia Allegro -------------------------//
   //Inicializa allegro, teclado, mouse e Imagens
   must_init(al_init(), "allegro");
   must_init(al_install_keyboard(), "keyboard");
@@ -52,16 +56,22 @@ int main()
   must_init(disp, "display");
   ALLEGRO_FONT* font = al_load_font("resources/Unique.ttf", 36, ALLEGRO_TTF_MONOCHROME);
   must_init(font, "font");
+  ALLEGRO_BITMAP *background = al_load_bitmap("resources/background.jpg");
+  must_init(background, "background");
 
-  //Funções de configuração
-  //al_set_new_display_flags(ALLEGRO_NOFRAME);
-  al_set_window_title(disp, "JEWELS");
+  //Cores
+  ALLEGRO_COLOR electricBlue = al_map_rgb(44, 117, 255);
 
-  //Sinalizadores de eventos
+  //Registradores de eventos
   al_register_event_source(queue, al_get_keyboard_event_source());
   al_register_event_source(queue, al_get_mouse_event_source());
   al_register_event_source(queue, al_get_display_event_source(disp));
   al_register_event_source(queue, al_get_timer_event_source(timer));
+
+  //Funções de configuração
+  al_set_window_title(disp, "JEWELS");
+  al_set_new_display_flags(ALLEGRO_NOFRAME);
+  al_hide_mouse_cursor(disp);
 
   //--------------------------- Inicia Allegro -------------------------//
 
@@ -81,25 +91,31 @@ int main()
     {
       //Tempo de um frame
       case ALLEGRO_EVENT_TIMER:
-        if (y < DISPLAY_H - 10)
-          y++;
         redraw = true;
         break;
 
       //O mouse foi movimentado
       case ALLEGRO_EVENT_MOUSE_AXES:
+//        x = event.mouse.x;
+//        y = event.mouse.y;
         break;
 
+      //Clique do mouse precionado
       case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
-        x = event.mouse.x;
-        y = event.mouse.y;
         break;
 
+      //Botão do mouse solto
       case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
         break;
 
       //Uma tecla do teclado foi pressionada
       case ALLEGRO_EVENT_KEY_DOWN:
+          switch (event.keyboard.keycode)
+          {
+            case ALLEGRO_KEY_LEFT:
+            case ALLEGRO_KEY_RIGHT:
+              break;
+          }
       
       //Botão de fechar foi pressionado
       case ALLEGRO_EVENT_DISPLAY_CLOSE:
@@ -114,10 +130,12 @@ int main()
     //Renderiza
     if(redraw && al_is_event_queue_empty(queue))
     {
-      al_clear_to_color(al_map_rgb(0, 0, 0));
+      //al_clear_to_color(al_map_rgb(0, 0, 0));   //Fundo preto
+      al_draw_bitmap(background, 0, 0, 0);
       al_draw_text(font, al_map_rgb(255, 255, 255), 25, 12, 0, "!! JEWELS !!");
 
-      al_draw_filled_rectangle(x, y, x+50, y+10, al_map_rgba_f(0, 0, 0.5, 0.5));
+      //Desenha retangulo
+      al_draw_filled_rectangle(x, y, x+10, y+10, electricBlue);
 
       //Commita imagem
       al_flip_display();
@@ -131,6 +149,7 @@ int main()
   al_destroy_display(disp);
   al_destroy_timer(timer);
   al_destroy_event_queue(queue);
+  al_destroy_bitmap(background);
 
   return 0;
 }
