@@ -1,10 +1,13 @@
 //Jewels by Muriki Gusmão Yamanaka
 
 #include <allegro5/bitmap.h>
+#include <allegro5/bitmap_draw.h>
+#include <allegro5/bitmap_io.h>
 #include <allegro5/events.h>
 #include <allegro5/mouse.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
@@ -35,7 +38,7 @@ float between_f(float lo, float hi)
 
 // --- display ---
 
-#define BUFFER_W 960
+#define BUFFER_W 720
 #define BUFFER_H 720
 
 #define DISP_SCALE 1
@@ -191,8 +194,8 @@ void bg_draw()
 
 typedef struct STAR
 {
-    float y;
-    float speed;
+  float y;
+  float speed;
 } STAR;
 
 #define STARS_N ((BUFFER_W / 2) - 1)  //Numero de estrelas
@@ -200,36 +203,36 @@ STAR stars[STARS_N];
 
 void stars_init()
 {
-    for(int i = 0; i < STARS_N; i++)
-    {
-        stars[i].y = between_f(0, BUFFER_H);
-        stars[i].speed = between_f(0.1, 1);
-    }
+  for(int i = 0; i < STARS_N; i++)
+  {
+    stars[i].y = between_f(0, BUFFER_H);
+    stars[i].speed = between_f(0.1, 1);
+  }
 }
 
 void stars_update()
 {
-    for(int i = 0; i < STARS_N; i++)
-    {
-        stars[i].y += stars[i].speed;
+  for(int i = 0; i < STARS_N; i++)
+  {
+    stars[i].y += stars[i].speed;
 
-        //Se estrela fora o buffer de display
-        if(stars[i].y >= BUFFER_H)
-        {
-            stars[i].y = 0;
-            stars[i].speed = between_f(0.1, 1);
-        }
+    //Se estrela fora o buffer de display
+    if(stars[i].y >= BUFFER_H)
+    {
+      stars[i].y = 0;
+      stars[i].speed = between_f(0.1, 1);
     }
+  }
 }
 
 void stars_draw()
 {
-    int star_x = 1;
-    for(int i = 0; i < STARS_N; i++)
-    {
-        al_draw_pixel(star_x, stars[i].y, al_map_rgb_f(255,255,255));
-        star_x += 2;
-    }
+  int star_x = 1;
+  for(int i = 0; i < STARS_N; i++)
+  {
+    al_draw_pixel(star_x, stars[i].y, al_map_rgb_f(255,255,255));
+    star_x += 2;
+  }
 }
 
 // --- mouse pointer ---
@@ -237,41 +240,155 @@ void stars_draw()
 typedef struct pointer
 {
   int x, y;
+  ALLEGRO_BITMAP *pntr_img;
 } mouse_p;
 
-ALLEGRO_BITMAP *pntr_img;
 mouse_p mouse_pointer;
 
-#define mouse_size 10
+#define mouse_size 12
 
 void mouse_pointer_init(){
   mouse_pointer.x = -mouse_size;
   mouse_pointer.y = -mouse_size;
 
-  pntr_img = al_load_bitmap("resources/pointer/pointer.png");
-  must_init(pntr_img, "Mouse pointer");
+  mouse_pointer.pntr_img = al_load_bitmap("resources/pointer/pointer.png");
+  must_init(mouse_pointer.pntr_img, "Mouse pointer");
 }
 
 void mouse_pointer_deinit()
 {
-  al_destroy_bitmap(pntr_img);
+  al_destroy_bitmap(mouse_pointer.pntr_img);
 }
 
-void mouse_pointer_update(){
+void mouse_pointer_update()
+{
   mouse_pointer.x = mouse.x;
   mouse_pointer.y = mouse.y;
 }
 
 void mouse_pointer_draw()
 {
-  al_draw_bitmap(pntr_img, mouse_pointer.x, mouse_pointer.y, 0);
+  al_draw_bitmap(mouse_pointer.pntr_img, mouse_pointer.x, mouse_pointer.y, 0);
 }
+
+// --- candy board ---
+
+typedef struct candy
+{
+  int x, y;
+  int type;
+  ALLEGRO_BITMAP *candy_map;
+} candy;
+
+//Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
+//Board_y [-- 140 (score) -- : -- 560 (board) -- : -- 20 (offset) --]
+#define x_offset 80   //Limites do tabuleiro
+#define y_offset 140  //Espaçamento do score
+#define CANDY_N 8     //Tamanho da matriz
+candy board[CANDY_N][CANDY_N];
+
+ALLEGRO_BITMAP *aleat_bitmap(int type)
+{
+  ALLEGRO_BITMAP *bitmap;
+  switch (type)
+  {
+    case 1:
+      bitmap = al_load_bitmap("resources/candy/candy1.png");
+      break;
+    case 2:
+      bitmap = al_load_bitmap("resources/candy/candy2.png");
+      break;
+    case 3:
+      bitmap = al_load_bitmap("resources/candy/candy3.png");
+      break;
+    case 4:
+      bitmap = al_load_bitmap("resources/candy/candy4.png");
+      break;
+    case 5:
+      bitmap = al_load_bitmap("resources/candy/candy5.png");
+      break;
+    default:
+      printf("Candy type not recognized\n");
+      exit(2);
+  }
+
+  must_init(bitmap, "board_bitmap");
+  return bitmap;
+}
+
+void board_init()
+{
+  int x_aux = 0;
+  int y_aux = 0;    //140 por conta do score
+  for(int i=0; i<CANDY_N ;i++){
+    for(int j=0; j<CANDY_N ;j++){
+      board[i][j].x = x_offset + x_aux;
+      board[i][j].y = y_offset + y_aux;
+      board[i][j].type = between(1, 6);
+      board[i][j].candy_map = aleat_bitmap(board[i][j].type);
+      x_aux += 70;   //Muda x para proximo doce da direita
+    }
+    x_aux = 0;
+    y_aux += 70;
+  }
+}
+
+void board_deinit()
+{
+  for(int i=0; i<CANDY_N ;i++)
+    for(int j=0; j<CANDY_N ;j++)
+      al_destroy_bitmap(board[i][j].candy_map);
+}
+
+//void board_update()
+//{
+//
+//}
+
+void board_draw()
+{
+  for(int i=0; i<CANDY_N ;i++)
+    for(int j=0; j<CANDY_N ;j++)
+      al_draw_bitmap(board[i][j].candy_map, board[i][j].x, board[i][j].y, 0);
+}
+
+// --- Score ---
+
+//typedef struct score{
+//  int global_score;
+//  int score;
+//  ALLEGRO_BITMAP *score_map;
+//} score;
+//
+//score game_score;
+//
+//void score_init()
+//{
+//
+//}
+//
+//void score_deinit()
+//{
+//
+//}
+//
+//void score_update()
+//{
+//
+//}
+//
+//void score_draw ()
+//{
+//
+//}
 
 
 // --- main ---
 
 int main()
 {
+  srand(time(NULL));    //Raiz aleatoria
+
   //Instala allegro e teclado
   must_init(al_init(), "allegro");
   must_init(al_install_keyboard(), "keyboard");
@@ -309,6 +426,7 @@ int main()
   // --- Inicia estruturas ---
   bg_init();
   stars_init();
+  board_init();
   mouse_pointer_init();
 
   frames = 0;
@@ -328,6 +446,7 @@ int main()
         //Update functions
         stars_update();
         mouse_pointer_update();
+
 
         if(key[ALLEGRO_KEY_ESCAPE])
           done = true;
@@ -354,6 +473,7 @@ int main()
       //Draw functions
       bg_draw();
       stars_draw();
+      board_draw();
       mouse_pointer_draw();
 
       disp_post_draw();
@@ -363,6 +483,7 @@ int main()
 
   // --- Destroy themes ---
   bg_deinit();
+  board_deinit();
   mouse_pointer_deinit();
 
   //audio_deinit();
