@@ -41,7 +41,7 @@ float between_f(float lo, float hi)
 
 #define BUFFER_W 720
 #define BUFFER_H 720
-#define FRAMES_N 60.0
+#define FRAMES_N 120.0
 
 #define DISP_SCALE 1
 #define DISP_W (BUFFER_W * DISP_SCALE)
@@ -169,16 +169,18 @@ mouse_t mouse;
 
 void mouse_init()
 {
-  al_hide_mouse_cursor(disp);
+  //al_hide_mouse_cursor(disp);
 }
 
 void mouse_update(ALLEGRO_EVENT* event)
 {
   switch(event->type)
   {
-    case ALLEGRO_EVENT_MOUSE_AXES:
+    case ALLEGRO_EVENT_TIMER:
       mouse.x = event->mouse.x;
       mouse.y = event->mouse.y;
+      mouse.x_click = -1;
+      mouse.y_click = -1;
       break;
 
     case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
@@ -265,11 +267,11 @@ typedef struct pointer
 
 mouse_p mouse_pointer;
 
-#define mouse_size 12
+#define MOUSE_SIZE 12
 
 void mouse_pointer_init(){
-  mouse_pointer.x = -mouse_size;
-  mouse_pointer.y = -mouse_size;
+  mouse_pointer.x = -MOUSE_SIZE;
+  mouse_pointer.y = -MOUSE_SIZE;
 
   mouse_pointer.pntr_img = al_load_bitmap("resources/pointer/pointer.png");
   must_init(mouse_pointer.pntr_img, "Mouse pointer");
@@ -297,132 +299,133 @@ typedef struct candy
 {
   int x, y;
   int type;
-  ALLEGRO_BITMAP *candy_map;
 } candy;
 
 //Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
 //Board_y [-- 140 (score) -- : -- 560 (board) -- : -- 20 (offset) --]
-#define x_offset 80     //Limites do tabuleiro
-#define y_offset 140    //Espaçamento do score
-#define candy_size 70   //Tamanho ocupado pelo doce
-#define BOARD_N 8       //Tamanho da matriz
-candy board[BOARD_N][BOARD_N];
-
-ALLEGRO_BITMAP *aleat_bitmap(int type)
-{
-  ALLEGRO_BITMAP *bitmap;
-  switch (type)
-  {
-    case 1:
-      bitmap = al_load_bitmap("resources/candy/candy1.png");
-      break;
-    case 2:
-      bitmap = al_load_bitmap("resources/candy/candy2.png");
-      break;
-    case 3:
-      bitmap = al_load_bitmap("resources/candy/candy3.png");
-      break;
-    case 4:
-      bitmap = al_load_bitmap("resources/candy/candy4.png");
-      break;
-    case 5:
-      bitmap = al_load_bitmap("resources/candy/candy5.png");
-      break;
-    default:
-      printf("Candy type not recognized\n");
-      exit(2);
-  }
-
-  must_init(bitmap, "board_bitmap");
-  return bitmap;
-}
+#define X_OFFSET 80                 //Limites do tabuleiro
+#define Y_OFFSET 140                //Espaçamento do score
+#define CANDY_SIZE 70               //Tamanho ocupado pelo doce
+#define BOARD_N 8                   //Tamanho da matriz
+#define CANDY_TYPE_N 5              //Tipos diferentes de doces
+candy board[BOARD_N][BOARD_N];      //Matriz de doces
+ALLEGRO_BITMAP *candy_sprite[5];    //Vetor de sprites
 
 void board_init()
 {
-  int x_aux = 0;
-  int y_aux = 0;    //140 por conta do score
+  //Inicia vetor de sprites
+  candy_sprite[0] = al_load_bitmap("resources/candy/candy1.png");
+  candy_sprite[1] = al_load_bitmap("resources/candy/candy2.png");
+  candy_sprite[2] = al_load_bitmap("resources/candy/candy3.png");
+  candy_sprite[3] = al_load_bitmap("resources/candy/candy4.png");
+  candy_sprite[4] = al_load_bitmap("resources/candy/candy5.png");
+
+  //Inicia board
+  int x_aux = 0, y_aux = 0;
   for(int i=0; i<BOARD_N ;i++){
     for(int j=0; j<BOARD_N ;j++){
-      board[i][j].x = x_offset + x_aux;
-      board[i][j].y = y_offset + y_aux;
-      board[i][j].type = between(1, 6);
-      x_aux += candy_size;   //Muda x para proximo doce da direita
+      board[i][j].x = X_OFFSET + x_aux;
+      board[i][j].y = Y_OFFSET + y_aux;
+      board[i][j].type = between(0, 5);
+      x_aux += CANDY_SIZE;   //Muda x para proximo doce da direita
     }
     x_aux = 0;
-    y_aux += candy_size;
+    y_aux += CANDY_SIZE;
   }
 }
 
 void board_deinit()
 {
-  for(int i=0; i<BOARD_N ;i++)
-    for(int j=0; j<BOARD_N ;j++)
-      al_destroy_bitmap(board[i][j].candy_map);
+  al_destroy_bitmap(candy_sprite[0]);
+  al_destroy_bitmap(candy_sprite[1]);
+  al_destroy_bitmap(candy_sprite[2]);
+  al_destroy_bitmap(candy_sprite[3]);
+  al_destroy_bitmap(candy_sprite[4]);
 }
 
-//Verifica integridade do tabuleiro
 void board_update()
 {
   int i, j;
   
-  i = (mouse.y_click - y_offset)/candy_size;
-  j = (mouse.x_click - x_offset)/candy_size;
+  //Calcula coordenadas do doce clicado na matriz
+  i = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
+  j = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
 
-  mouse.x_click = -1;
-  mouse.y_click = -1;
+  //Muda doce
+  if ((i > -1 && i < BOARD_N) && (j > -1 && j < BOARD_N)){
+    board[i][j].type++;
+    if (board[i][j].type == 5)
+      board[i][j].type = 0;
+  }
 
+  //Integridade horizontal
+  for (int i=0; i<BOARD_N ;i++)
+    for (int j=0; j<BOARD_N-2 ;j++)
+    {
+      int tipo = board[i][j].type;
 
-  if ((i > -1 && i < BOARD_N) && (j > -1 && j < BOARD_N))
-    board[i][j].type = between(1, 6);
-  //int tipo;
-  ////Integridade horizontal
-  //for (int i=0; i<BOARD_N ;i++)
-  //  for (int j=0; j<BOARD_N-2 ;j++)
-  //  {
-  //    tipo = board[i][j].type;
+      if ((board[i][j+1].type == tipo) && (board[i][j+2].type == tipo))
+      {
+        int k = j+3;
+        while ((k < BOARD_N) && (board[i][k].type == tipo))
+          k++;
 
-  //    //Busca doces iguais na linha
-  //    int k = j+1;
-  //    int size = 1;
-  //    while (board[i][k].type == tipo || k < BOARD_N)
-  //    {
-  //      size++;
-  //      k++;
-  //    }
+        //De j até k-1 os doces são repetidos
+        int l = i, m = j;
+        for (; l>0 ;l--){
+          for (; m<k ;m++)
+            board[l][m].type = board[l-1][m].type;
+          m = j;
+        }
+        //Gera doces da linha zero
+        for (; m<k; m++)
+          board[l][m].type = between(0, 5);
 
-  //    //Se houver mais de 3 peças repetidas
-  //    if (size > 2){
-  //      //De j até k-1 na linha i os doces são iguais
-  //      int l = i;
-  //      int m = j;
+      }
+    }
 
-  //      //Desce doces
-  //      for (; m<k ;m++){
-  //        for (; l>0 ;l--)
-  //          board[l][m].type = board[l-1][m].type;
+  //Integridade vertical
+  for (int i=0; i<BOARD_N-2 ;i++)
+    for (int j=0; j<BOARD_N ;j++)
+    {
+      int tipo = board[i][j].type;
 
-  //        board[l][m].type = between(1, 6);
-  //      }
-  //    }
-  //  }
+      if (board[i+1][j].type == tipo && board[i+2][j].type == tipo)
+      {
+        int k = i+3;
+        while((k < BOARD_N) && (board[k][j].type == tipo))
+          k++;
 
-  ////Integridade vertical
+        printf("i=%d, j=%d, k=%d\n", i, j, k);
+        //Na coluna j, de i até k-1 os doces são iguais
+        while (i > 0)
+        {
+          board[k-1][j].type = board[i-1][j].type;
+          k--;
+          i--;
+        }
+        //Gera doces restantes
+        while (k >= 0){
+          board[k][j].type = between(0, 5);
+          k--;
+        }
+      }
+    }
+
 }
 
 void board_draw()
 {
   for(int i=0; i<BOARD_N ;i++)
-    for(int j=0; j<BOARD_N ;j++){
-      board[i][j].candy_map = aleat_bitmap(board[i][j].type);
-      al_draw_bitmap(board[i][j].candy_map, board[i][j].x, board[i][j].y, 0);
-    }
+    for(int j=0; j<BOARD_N ;j++)
+      al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
 }
 
 // --- Score ---
 
 typedef struct score{
-  int global_score;
   int score;
+  int global_score;
   int x1, y1, x2, y2;
   ALLEGRO_BITMAP *score_map;
 } score;
@@ -431,8 +434,8 @@ score game_score;
 
 void score_init()
 {
-  game_score.global_score = 0;
   game_score.score = 0;
+  game_score.global_score = 0;
   game_score.x1 = 160; game_score.y1 = 70;
   game_score.x2 = 370; game_score.y2 = 70;
   game_score.score_map = al_load_bitmap("resources/score/score.png");
@@ -443,15 +446,10 @@ void score_deinit()
   al_destroy_bitmap(game_score.score_map);
 }
 
-//void score_update()
-//{
-//
-//}
-
 void score_draw ()
 {
   al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
-  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
+  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
 }
 
 
@@ -477,7 +475,7 @@ int main()
   audio_init();       //Inicia Audio
   font_init();        //Inicia fonte
   keyboard_init();    //Zera vetor de teclado
-  mouse_init();
+  //mouse_init();
 
   must_init(al_init_image_addon(), "image");    //Permite adição de imagens
   must_init(al_init_primitives_addon(), "primitives");    //Permite adição de primitivas
@@ -498,7 +496,7 @@ int main()
   stars_init();
   board_init();
   score_init();
-  mouse_pointer_init();
+  //mouse_pointer_init();
 
   frames = 0;
 
@@ -516,8 +514,8 @@ int main()
       case ALLEGRO_EVENT_TIMER:
         //Update functions
         stars_update();
-        //board_update();
-        mouse_pointer_update();
+        board_update();
+        //mouse_pointer_update();
 
         if(key[ALLEGRO_KEY_ESCAPE])
           done = true;
@@ -546,7 +544,7 @@ int main()
       stars_draw();
       board_draw();
       score_draw();
-      mouse_pointer_draw();
+      //mouse_pointer_draw();
 
       disp_post_draw();
       redraw = false;
@@ -555,9 +553,9 @@ int main()
 
   // --- Destroy themes ---
   score_deinit();
-  //board_deinit();
+  board_deinit();
   bg_deinit();
-  mouse_pointer_deinit();
+  //mouse_pointer_deinit();
 
   audio_deinit();
   font_deinit();

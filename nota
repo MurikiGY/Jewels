@@ -1,4 +1,7 @@
-Board ta dando merda, descobrir o porque da falha de segmentação.
+# Board ta dando merda, descobrir o porque da falha de segmentação.
+  - Corrigido, tinha colocado uma variavel de allegro_bitmap para cada posição da matriz, alterei para um vetor de sprites.
 
-Implementar board_update, nem que seja só alterar os doces
+# Ao clicar no doce, o typo do doce não eh alterado, o mouse funciona perfeitamente?
+  - Na verdade eh alterado, porém como estava com a função between ele alterava para o mesmo tipo de doce. Mouse funcionando normalmente.
+
 
