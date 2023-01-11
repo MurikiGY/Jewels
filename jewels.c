@@ -10,6 +10,7 @@
 #include <time.h>
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
@@ -40,6 +41,7 @@ float between_f(float lo, float hi)
 
 #define BUFFER_W 720
 #define BUFFER_H 720
+#define FRAMES_N 60.0
 
 #define DISP_SCALE 1
 #define DISP_W (BUFFER_W * DISP_SCALE)
@@ -85,10 +87,26 @@ void disp_post_draw()
   al_flip_display();
 }
 
+// --- Fonte ---
+
+ALLEGRO_FONT* font;
+
+void font_init()
+{
+  al_init_font_addon();
+  al_init_ttf_addon();
+  font = al_load_font("resources/fonts/MASLITE.otf", 36, 0);
+  must_init(font, "Font");
+}
+
+void font_deinit()
+{
+  al_destroy_font(font);
+}
+
 // --- audio ---
 
-//ALLEGRO_SAMPLE* sample_shot;
-//ALLEGRO_SAMPLE* sample_explode[2];
+ALLEGRO_AUDIO_STREAM *bg_music;
 
 void audio_init()
 {
@@ -96,15 +114,17 @@ void audio_init()
   al_init_acodec_addon();
   al_reserve_samples(128);
 
-  //Carregar variaveis de audio
+  //Variaveis de audio
+  bg_music = al_load_audio_stream("resources/sound/music.opus", 2, 2048);
+  must_init(bg_music, "bg_music");
+  al_set_audio_stream_playmode(bg_music, ALLEGRO_PLAYMODE_LOOP);
+  al_attach_audio_stream_to_mixer(bg_music, al_get_default_mixer());
 }
 
-//void audio_deinit()
-//{
-//    al_destroy_sample(sample_shot);
-//    al_destroy_sample(sample_explode[0]);
-//    al_destroy_sample(sample_explode[1]);
-//}
+void audio_deinit()
+{
+  al_destroy_audio_stream(bg_music);
+}
 
 // --- keyboard ---
 
@@ -282,10 +302,11 @@ typedef struct candy
 
 //Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
 //Board_y [-- 140 (score) -- : -- 560 (board) -- : -- 20 (offset) --]
-#define x_offset 80   //Limites do tabuleiro
-#define y_offset 140  //Espaçamento do score
-#define CANDY_N 8     //Tamanho da matriz
-candy board[CANDY_N][CANDY_N];
+#define x_offset 80     //Limites do tabuleiro
+#define y_offset 140    //Espaçamento do score
+#define candy_size 70   //Tamanho ocupado pelo doce
+#define BOARD_N 8       //Tamanho da matriz
+candy board[BOARD_N][BOARD_N];
 
 ALLEGRO_BITMAP *aleat_bitmap(int type)
 {
@@ -320,67 +341,118 @@ void board_init()
 {
   int x_aux = 0;
   int y_aux = 0;    //140 por conta do score
-  for(int i=0; i<CANDY_N ;i++){
-    for(int j=0; j<CANDY_N ;j++){
+  for(int i=0; i<BOARD_N ;i++){
+    for(int j=0; j<BOARD_N ;j++){
       board[i][j].x = x_offset + x_aux;
       board[i][j].y = y_offset + y_aux;
       board[i][j].type = between(1, 6);
-      board[i][j].candy_map = aleat_bitmap(board[i][j].type);
-      x_aux += 70;   //Muda x para proximo doce da direita
+      x_aux += candy_size;   //Muda x para proximo doce da direita
     }
     x_aux = 0;
-    y_aux += 70;
+    y_aux += candy_size;
   }
 }
 
 void board_deinit()
 {
-  for(int i=0; i<CANDY_N ;i++)
-    for(int j=0; j<CANDY_N ;j++)
+  for(int i=0; i<BOARD_N ;i++)
+    for(int j=0; j<BOARD_N ;j++)
       al_destroy_bitmap(board[i][j].candy_map);
 }
 
-//void board_update()
-//{
-//
-//}
+//Verifica integridade do tabuleiro
+void board_update()
+{
+  int i, j;
+  
+  i = (mouse.y_click - y_offset)/candy_size;
+  j = (mouse.x_click - x_offset)/candy_size;
+
+  mouse.x_click = -1;
+  mouse.y_click = -1;
+
+
+  if ((i > -1 && i < BOARD_N) && (j > -1 && j < BOARD_N))
+    board[i][j].type = between(1, 6);
+  //int tipo;
+  ////Integridade horizontal
+  //for (int i=0; i<BOARD_N ;i++)
+  //  for (int j=0; j<BOARD_N-2 ;j++)
+  //  {
+  //    tipo = board[i][j].type;
+
+  //    //Busca doces iguais na linha
+  //    int k = j+1;
+  //    int size = 1;
+  //    while (board[i][k].type == tipo || k < BOARD_N)
+  //    {
+  //      size++;
+  //      k++;
+  //    }
+
+  //    //Se houver mais de 3 peças repetidas
+  //    if (size > 2){
+  //      //De j até k-1 na linha i os doces são iguais
+  //      int l = i;
+  //      int m = j;
+
+  //      //Desce doces
+  //      for (; m<k ;m++){
+  //        for (; l>0 ;l--)
+  //          board[l][m].type = board[l-1][m].type;
+
+  //        board[l][m].type = between(1, 6);
+  //      }
+  //    }
+  //  }
+
+  ////Integridade vertical
+}
 
 void board_draw()
 {
-  for(int i=0; i<CANDY_N ;i++)
-    for(int j=0; j<CANDY_N ;j++)
+  for(int i=0; i<BOARD_N ;i++)
+    for(int j=0; j<BOARD_N ;j++){
+      board[i][j].candy_map = aleat_bitmap(board[i][j].type);
       al_draw_bitmap(board[i][j].candy_map, board[i][j].x, board[i][j].y, 0);
+    }
 }
 
 // --- Score ---
 
-//typedef struct score{
-//  int global_score;
-//  int score;
-//  ALLEGRO_BITMAP *score_map;
-//} score;
-//
-//score game_score;
-//
-//void score_init()
-//{
-//
-//}
-//
-//void score_deinit()
-//{
-//
-//}
-//
+typedef struct score{
+  int global_score;
+  int score;
+  int x1, y1, x2, y2;
+  ALLEGRO_BITMAP *score_map;
+} score;
+
+score game_score;
+
+void score_init()
+{
+  game_score.global_score = 0;
+  game_score.score = 0;
+  game_score.x1 = 160; game_score.y1 = 70;
+  game_score.x2 = 370; game_score.y2 = 70;
+  game_score.score_map = al_load_bitmap("resources/score/score.png");
+}
+
+void score_deinit()
+{
+  al_destroy_bitmap(game_score.score_map);
+}
+
 //void score_update()
 //{
 //
 //}
-//
-//void score_draw ()
-//{
-//
-//}
+
+void score_draw ()
+{
+  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
+  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
+}
 
 
 // --- main ---
@@ -395,7 +467,7 @@ int main()
   must_init(al_install_mouse(), "mouse");
 
   //Variavel de tempo
-  ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);   //Inicia variavel de tempo
+  ALLEGRO_TIMER* timer = al_create_timer(1.0 / FRAMES_N);   //Inicia variavel de tempo
   must_init(timer, "timer");
   //Variavel de eventos
   ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
@@ -403,14 +475,12 @@ int main()
 
   disp_init();        //Inicia Display
   audio_init();       //Inicia Audio
+  font_init();        //Inicia fonte
   keyboard_init();    //Zera vetor de teclado
   mouse_init();
 
-  //Permite adição de imagens
-  must_init(al_init_image_addon(), "image");
-
-  //Permite adição de primitivas
-  must_init(al_init_primitives_addon(), "primitives");
+  must_init(al_init_image_addon(), "image");    //Permite adição de imagens
+  must_init(al_init_primitives_addon(), "primitives");    //Permite adição de primitivas
 
   //Instala audio e acodecs
   must_init(al_install_audio(), "audio");
@@ -427,6 +497,7 @@ int main()
   bg_init();
   stars_init();
   board_init();
+  score_init();
   mouse_pointer_init();
 
   frames = 0;
@@ -445,8 +516,8 @@ int main()
       case ALLEGRO_EVENT_TIMER:
         //Update functions
         stars_update();
+        //board_update();
         mouse_pointer_update();
-
 
         if(key[ALLEGRO_KEY_ESCAPE])
           done = true;
@@ -474,6 +545,7 @@ int main()
       bg_draw();
       stars_draw();
       board_draw();
+      score_draw();
       mouse_pointer_draw();
 
       disp_post_draw();
@@ -482,11 +554,13 @@ int main()
   }
 
   // --- Destroy themes ---
+  score_deinit();
+  //board_deinit();
   bg_deinit();
-  board_deinit();
   mouse_pointer_deinit();
 
-  //audio_deinit();
+  audio_deinit();
+  font_deinit();
   disp_deinit();
   al_destroy_timer(timer);
   al_destroy_event_queue(queue);
