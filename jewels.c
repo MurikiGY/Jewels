@@ -163,6 +163,8 @@ typedef struct mouse
   int y;
   int x_click;
   int y_click;
+  int x_release;
+  int y_release;
 } mouse_t;
 
 mouse_t mouse;
@@ -177,15 +179,25 @@ void mouse_update(ALLEGRO_EVENT* event)
   switch(event->type)
   {
     case ALLEGRO_EVENT_TIMER:
+      //mouse.x_click = -1;
+      //mouse.y_click = -1;
+      mouse.x_release = -1;
+      mouse.y_release = -1;
+      break;
+
+    case ALLEGRO_EVENT_MOUSE_AXES:
       mouse.x = event->mouse.x;
       mouse.y = event->mouse.y;
-      mouse.x_click = -1;
-      mouse.y_click = -1;
       break;
 
     case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
       mouse.x_click = event->mouse.x;
       mouse.y_click = event->mouse.y;
+      break;
+
+    case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+      mouse.x_release = event->mouse.x;
+      mouse.y_release = event->mouse.y;
       break;
   }
 }
@@ -322,8 +334,10 @@ void board_init()
 
   //Inicia board
   int x_aux = 0, y_aux = 0;
-  for(int i=0; i<BOARD_N ;i++){
-    for(int j=0; j<BOARD_N ;j++){
+  for(int i=0; i<BOARD_N ;i++)
+  {
+    for(int j=0; j<BOARD_N ;j++)
+    {
       board[i][j].x = X_OFFSET + x_aux;
       board[i][j].y = Y_OFFSET + y_aux;
       board[i][j].type = between(0, 5);
@@ -345,17 +359,30 @@ void board_deinit()
 
 void board_update()
 {
-  int i, j;
+  int i_click, j_click;
+  int i_release, j_release;
   
   //Calcula coordenadas do doce clicado na matriz
-  i = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
-  j = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
+  i_click = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
+  j_click = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
+  i_release = (mouse.y_release - Y_OFFSET)/CANDY_SIZE;
+  j_release = (mouse.x_release - X_OFFSET)/CANDY_SIZE;
 
-  //Muda doce
-  if ((i > -1 && i < BOARD_N) && (j > -1 && j < BOARD_N)){
-    board[i][j].type++;
-    if (board[i][j].type == 5)
-      board[i][j].type = 0;
+  //Se o click foi no tabuleiro
+  if ((i_click > -1 && i_click < BOARD_N) && (j_click > -1 && j_click < BOARD_N))
+  {
+    //Se o release foi no tabuleiro
+    if ((i_release > -1 && i_release < BOARD_N) && (j_release > -1 && j_release < BOARD_N))
+    {
+      //Se o release foi ao lado do click
+      if ((i_release == i_click || i_release == i_click+1 || i_release == i_click-1) &&
+          (j_release == j_click || j_release == j_click+1 || j_release == j_click-1)){
+        int tipo;
+        tipo = board[i_click][j_click].type;
+        board[i_click][j_click].type = board[i_release][j_release].type;
+        board[i_release][j_release].type = tipo;
+      }
+    }
   }
 
   //Integridade horizontal
@@ -396,7 +423,6 @@ void board_update()
         while((k < BOARD_N) && (board[k][j].type == tipo))
           k++;
 
-        printf("i=%d, j=%d, k=%d\n", i, j, k);
         //Na coluna j, de i até k-1 os doces são iguais
         while (i > 0)
         {
@@ -405,8 +431,8 @@ void board_update()
           i--;
         }
         //Gera doces restantes
-        while (k >= 0){
-          board[k][j].type = between(0, 5);
+        while (k > 0){
+          board[k-1][j].type = between(0, 5);
           k--;
         }
       }
@@ -449,7 +475,7 @@ void score_deinit()
 void score_draw ()
 {
   al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
-  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
+  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
 }
 
 
