@@ -15,6 +15,7 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_image.h>
+#include <unistd.h>
 
 //Teste de inicialização
 void must_init(bool test, const char *description)
@@ -305,6 +306,37 @@ void mouse_pointer_draw()
   al_draw_bitmap(mouse_pointer.pntr_img, mouse_pointer.x, mouse_pointer.y, 0);
 }
 
+// --- Score ---
+
+typedef struct score{
+  int score;
+  int global_score;
+  int x1, y1, x2, y2;
+  ALLEGRO_BITMAP *score_map;
+} score;
+
+score game_score;
+
+void score_init()
+{
+  game_score.score = 0;
+  game_score.global_score = 0;
+  game_score.x1 = 160; game_score.y1 = 70;
+  game_score.x2 = 370; game_score.y2 = 70;
+  game_score.score_map = al_load_bitmap("resources/score/score.png");
+}
+
+void score_deinit()
+{
+  al_destroy_bitmap(game_score.score_map);
+}
+
+void score_draw ()
+{
+  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
+  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
+}
+
 // --- candy board ---
 
 typedef struct candy
@@ -357,6 +389,68 @@ void board_deinit()
   al_destroy_bitmap(candy_sprite[4]);
 }
 
+//Verifica integridade do tabuleiro
+void board_check()
+{ 
+  //Integridade horizontal
+  for (int i=0; i<BOARD_N ;i++)
+  {
+    for (int j=0; j<BOARD_N-2 ;j++)
+    {
+      int tipo = board[i][j].type;
+      if ((board[i][j+1].type == tipo) && (board[i][j+2].type == tipo))
+      {
+        int k = j+3;
+        while ((k < BOARD_N) && (board[i][k].type == tipo)) //Pega outros doces alinhados
+          k++;
+
+        //Calcula score
+        game_score.score += 100 * (k - j);  //100 pts p/ cada doce repetido
+
+        //De j até k-1 os doces são repetidos
+        int l = i, m = j;
+        for (; l>0 ;l--){
+          for (; m<k ;m++)
+            board[l][m].type = board[l-1][m].type;
+          m = j;
+        }
+        //Gera doces da linha zero
+        for (; m<k; m++)
+          board[l][m].type = between(0, 5);
+
+      }
+    }
+  } //Integridade horizontal
+
+  //Integridade vertical
+  for (int i=0; i<BOARD_N-2 ;i++)
+  {
+    for (int j=0; j<BOARD_N ;j++)
+    {
+      int tipo = board[i][j].type;
+      if (board[i+1][j].type == tipo && board[i+2][j].type == tipo)
+      {
+        int k = i+3;
+        while((k < BOARD_N) && (board[k][j].type == tipo))  //Pega outros doces alinhados
+          k++;
+
+        //Na coluna j, de i até k-1 os doces são iguais
+        while (i > 0)
+        {
+          board[k-1][j].type = board[i-1][j].type;
+          k--;
+          i--;
+        }
+        //Gera doces restantes
+        while (k > 0){
+          board[k-1][j].type = between(0, 5);
+          k--;
+        }
+      }
+    }
+  } //Integridade vertical
+}
+
 void board_update()
 {
   int i_click, j_click;
@@ -375,69 +469,24 @@ void board_update()
     if ((i_release > -1 && i_release < BOARD_N) && (j_release > -1 && j_release < BOARD_N))
     {
       //Se o release foi ao lado do click
-      if ((i_release == i_click || i_release == i_click+1 || i_release == i_click-1) &&
-          (j_release == j_click || j_release == j_click+1 || j_release == j_click-1)){
-        int tipo;
-        tipo = board[i_click][j_click].type;
-        board[i_click][j_click].type = board[i_release][j_release].type;
-        board[i_release][j_release].type = tipo;
+      if ((i_release==i_click && j_release==j_click-1) || (i_release==i_click && j_release==j_click+1) ||
+          (i_release==i_click-1 && j_release==j_click) || (i_release==i_click+1 && j_release==j_click)){
+        int make_point = 1;
+
+        if (make_point)
+        {
+          //Troca doces
+          int tipo;
+          tipo = board[i_click][j_click].type;
+          board[i_click][j_click].type = board[i_release][j_release].type;
+          board[i_release][j_release].type = tipo;
+        }
+
       }
     }
   }
 
-  //Integridade horizontal
-  for (int i=0; i<BOARD_N ;i++)
-    for (int j=0; j<BOARD_N-2 ;j++)
-    {
-      int tipo = board[i][j].type;
-
-      if ((board[i][j+1].type == tipo) && (board[i][j+2].type == tipo))
-      {
-        int k = j+3;
-        while ((k < BOARD_N) && (board[i][k].type == tipo))
-          k++;
-
-        //De j até k-1 os doces são repetidos
-        int l = i, m = j;
-        for (; l>0 ;l--){
-          for (; m<k ;m++)
-            board[l][m].type = board[l-1][m].type;
-          m = j;
-        }
-        //Gera doces da linha zero
-        for (; m<k; m++)
-          board[l][m].type = between(0, 5);
-
-      }
-    }
-
-  //Integridade vertical
-  for (int i=0; i<BOARD_N-2 ;i++)
-    for (int j=0; j<BOARD_N ;j++)
-    {
-      int tipo = board[i][j].type;
-
-      if (board[i+1][j].type == tipo && board[i+2][j].type == tipo)
-      {
-        int k = i+3;
-        while((k < BOARD_N) && (board[k][j].type == tipo))
-          k++;
-
-        //Na coluna j, de i até k-1 os doces são iguais
-        while (i > 0)
-        {
-          board[k-1][j].type = board[i-1][j].type;
-          k--;
-          i--;
-        }
-        //Gera doces restantes
-        while (k > 0){
-          board[k-1][j].type = between(0, 5);
-          k--;
-        }
-      }
-    }
-
+  board_check();
 }
 
 void board_draw()
@@ -445,37 +494,6 @@ void board_draw()
   for(int i=0; i<BOARD_N ;i++)
     for(int j=0; j<BOARD_N ;j++)
       al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
-}
-
-// --- Score ---
-
-typedef struct score{
-  int score;
-  int global_score;
-  int x1, y1, x2, y2;
-  ALLEGRO_BITMAP *score_map;
-} score;
-
-score game_score;
-
-void score_init()
-{
-  game_score.score = 0;
-  game_score.global_score = 0;
-  game_score.x1 = 160; game_score.y1 = 70;
-  game_score.x2 = 370; game_score.y2 = 70;
-  game_score.score_map = al_load_bitmap("resources/score/score.png");
-}
-
-void score_deinit()
-{
-  al_destroy_bitmap(game_score.score_map);
-}
-
-void score_draw ()
-{
-  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
-  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
 }
 
 
@@ -542,6 +560,7 @@ int main()
         stars_update();
         board_update();
         //mouse_pointer_update();
+        printf("Score: %d\n", game_score.score);
 
         if(key[ALLEGRO_KEY_ESCAPE])
           done = true;
