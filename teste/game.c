@@ -635,7 +635,7 @@ typedef struct ALIEN
 } ALIEN;
 
 #define ALIENS_N 8
-ALIEN aliens[ALIENS_N];
+ALIEN aliens[ALIENS_N]; //Vetor de aliens
 
 void aliens_init()
 {

@@ -309,9 +309,11 @@ void mouse_pointer_draw()
 // --- Score ---
 
 typedef struct score{
-  int score;
-  int global_score;
-  int x1, y1, x2, y2;
+  int   score;
+  char  str_score[20];
+  int   global_score;
+  char  str_global_score[20];
+  int   x1, y1, x2, y2;
   ALLEGRO_BITMAP *score_map;
 } score;
 
@@ -320,7 +322,9 @@ score game_score;
 void score_init()
 {
   game_score.score = 0;
+  strcpy(game_score.str_score, "0");
   game_score.global_score = 0;
+  strcpy(game_score.str_global_score, "0");
   game_score.x1 = 160; game_score.y1 = 70;
   game_score.x2 = 370; game_score.y2 = 70;
   game_score.score_map = al_load_bitmap("resources/score/score.png");
@@ -333,8 +337,8 @@ void score_deinit()
 
 void score_draw ()
 {
-  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
-  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, "GAME OVER");
+  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
+  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, game_score.str_score);
 }
 
 // --- candy board ---
@@ -352,8 +356,15 @@ typedef struct candy
 #define CANDY_SIZE 70               //Tamanho ocupado pelo doce
 #define BOARD_N 8                   //Tamanho da matriz
 #define CANDY_TYPE_N 5              //Tipos diferentes de doces
+
 candy board[BOARD_N][BOARD_N];      //Matriz de doces
 ALLEGRO_BITMAP *candy_sprite[5];    //Vetor de sprites
+int board_block;                    //Booleano para travar board
+int i_clk, j_clk;       //click candy
+int i_rls, j_rls;       //release candy
+int switch_done;        //Testa se a troca terminou
+int x_clk, y_clk;       //Coordenadas do click
+int x_rls, y_rls;       //Coordenadas do release
 
 void board_init()
 {
@@ -366,10 +377,8 @@ void board_init()
 
   //Inicia board
   int x_aux = 0, y_aux = 0;
-  for(int i=0; i<BOARD_N ;i++)
-  {
-    for(int j=0; j<BOARD_N ;j++)
-    {
+  for(int i=0; i<BOARD_N ;i++){
+    for(int j=0; j<BOARD_N ;j++){
       board[i][j].x = X_OFFSET + x_aux;
       board[i][j].y = Y_OFFSET + y_aux;
       board[i][j].type = between(0, 5);
@@ -378,6 +387,11 @@ void board_init()
     x_aux = 0;
     y_aux += CANDY_SIZE;
   }
+
+  board_block = 0;
+  switch_done = 1;
+  i_clk = -1; j_clk = -1;
+  i_rls = -1; j_rls = -1;
 }
 
 void board_deinit()
@@ -389,15 +403,13 @@ void board_deinit()
   al_destroy_bitmap(candy_sprite[4]);
 }
 
-//Verifica integridade do tabuleiro
-int board_check()
+//Verifica integridade do tabuleiro, alterando as peças
+int board_flush()
 { 
   int point = 0;
   //Integridade horizontal
-  for (int i=0; i<BOARD_N ;i++)
-  {
-    for (int j=0; j<BOARD_N-2 ;j++)
-    {
+  for (int i=0; i<BOARD_N ;i++){
+    for (int j=0; j<BOARD_N-2 ;j++){
       int tipo = board[i][j].type;
       if ((board[i][j+1].type == tipo) && (board[i][j+2].type == tipo)) //Triple candy
       {
@@ -408,6 +420,7 @@ int board_check()
 
         //Calcula score
         game_score.score += 100 * (k - j);  //100 pts p/ cada doce repetido
+        sprintf(game_score.str_score, "%d", game_score.score);
 
         //De j até k-1 os doces são repetidos
         int l = i, m = j;
@@ -424,10 +437,8 @@ int board_check()
   } //Integridade horizontal
 
   //Integridade vertical
-  for (int i=0; i<BOARD_N-2 ;i++)
-  {
-    for (int j=0; j<BOARD_N ;j++)
-    {
+  for (int i=0; i<BOARD_N-2 ;i++){
+    for (int j=0; j<BOARD_N ;j++){
       int tipo = board[i][j].type;
       if (board[i+1][j].type == tipo && board[i+2][j].type == tipo) //Triple candy
       {
@@ -436,9 +447,12 @@ int board_check()
         while((k < BOARD_N) && (board[k][j].type == tipo))  //Pega outros doces alinhados
           k++;
 
+        //Calcula score
+        game_score.score += 100 * (k - i);  //100 pts p/ cada doce repetido
+        sprintf(game_score.str_score, "%d", game_score.score);
+
         //Na coluna j, de i até k-1 os doces são iguais
-        while (i > 0)
-        {
+        while (i > 0){
           board[k-1][j].type = board[i-1][j].type;
           k--;
           i--;
@@ -455,6 +469,29 @@ int board_check()
   return point;
 }
 
+int board_check()
+{
+  //Verifica horizontal
+  for (int i=0; i<BOARD_N ;i++)
+    for (int j=0; j<BOARD_N-2 ;j++)
+    {
+      int tipo = board[i][j].type;
+      if (board[i][j+1].type == tipo && board[i][j+2].type == tipo)
+        return 1;
+    }
+
+  //Verifica vertical
+  for (int i=0; i<BOARD_N-2 ;i++)
+    for (int j=0; j<BOARD_N ;j++)
+    {
+      int tipo = board[i][j].type;
+      if (board[i+1][j].type == tipo && board[i+2][j].type == tipo)
+        return 1;
+    }
+
+  return 0; //Não foi marcado ponto
+}
+
 //Troca doces do board de posicao
 void switch_candy(int x, int y, int z, int w)
 {
@@ -465,40 +502,86 @@ void switch_candy(int x, int y, int z, int w)
 
 void board_update()
 {
-  int i_click, j_click;
-  int i_release, j_release;
-  
-  //Calcula coordenadas do doce clicado na matriz
-  i_click = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
-  j_click = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
-  i_release = (mouse.y_release - Y_OFFSET)/CANDY_SIZE;
-  j_release = (mouse.x_release - X_OFFSET)/CANDY_SIZE;
+  if (board_block){ //Se board travado
+    // Movimenta troca, e a queda dos doces
+    //i_clk, j_clk me dizem qual o doce de origem
+    //i_rls, j_rls me dizem qual o doce de destino
+    
+    //Testa se terminou de movimentar
+    if ( board[i_clk][j_clk].x == x_rls && board[i_clk][j_clk].y == y_rls &&
+         board[i_rls][j_rls].x == x_clk && board[i_rls][j_rls].y == y_clk ){
+      switch_candy(i_clk, j_clk, i_rls, j_rls);
+      board_block = 0;    //Destrava board
+      board[i_clk][j_clk].x = x_clk;    //Restaura posições originais    
+      board[i_clk][j_clk].y = y_clk;    //Restaura posições originais
+      board[i_rls][j_rls].x = x_rls;    //Restaura posições originais
+      board[i_rls][j_rls].y = y_rls;    //Restaura posições originais
+      i_clk = -1;
+      j_clk = -1;
+      i_rls = -1;
+      j_rls = -1;
+      x_clk = -1;
+      y_clk = -1;
+    }
 
-  int make_point = 0;
-  //Se o click foi no tabuleiro
-  if ((i_click > -1 && i_click < BOARD_N) && (j_click > -1 && j_click < BOARD_N))
-  {
-    //Se o release foi no tabuleiro
-    if ((i_release > -1 && i_release < BOARD_N) && (j_release > -1 && j_release < BOARD_N))
-    {
-      //Se o release foi ao lado do click
-      if ((i_release==i_click && j_release==j_click-1) || (i_release==i_click && j_release==j_click+1) ||
-          (i_release==i_click-1 && j_release==j_click) || (i_release==i_click+1 && j_release==j_click))
-      {
-        //Troca doces
-        switch_candy(i_click, j_click, i_release, j_release);
+    int horizontal, vertical;
+    horizontal = j_rls - j_clk;   //Calcula mov. direita ou esquerda
+    vertical = i_rls - i_clk;     //Calcula mov. cima ou baixo
 
-        //Testa se foi marcado ponto
-        make_point = board_check();
+    if ( horizontal > 0 ){         //Movimenta click pra direita
+      board[i_clk][j_clk].x++;
+      board[i_rls][j_rls].x--;
+    } else if ( horizontal < 0 ){    //Movimenta click para esquerda
+        board[i_clk][j_clk].x--;
+        board[i_rls][j_rls].x++;
+    } else if ( vertical > 0 ){      //Movimenta click para baixo
+        board[i_clk][j_clk].y++;
+        board[i_rls][j_rls].y--;
+    } else if ( vertical < 0 ){      //Movimenta click para cima
+        board[i_clk][j_clk].y--;
+        board[i_rls][j_rls].y++;
+    }
 
-        //Se não foi marcado ponto, desfaz troca
-        if (!make_point)
-          switch_candy(i_click, j_click, i_release, j_release);
+  } else {    //Board não bloqueado, pega informações do mouse
+    int i_click, j_click;
+    int i_release, j_release;
+    
+    //Calcula coordenadas do doce clicado na matriz
+    i_click = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
+    j_click = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
+    i_release = (mouse.y_release - Y_OFFSET)/CANDY_SIZE;
+    j_release = (mouse.x_release - X_OFFSET)/CANDY_SIZE;
+
+    int make_point = 0;
+    //Se o click foi no tabuleiro
+    if ((i_click > -1 && i_click < BOARD_N) && (j_click > -1 && j_click < BOARD_N)){
+      //Se o release foi no tabuleiro
+      if ((i_release > -1 && i_release < BOARD_N) && (j_release > -1 && j_release < BOARD_N)){
+        //Se o release foi ao lado do click
+        if ((i_release==i_click && j_release==j_click-1) || (i_release==i_click && j_release==j_click+1) ||
+            (i_release==i_click-1 && j_release==j_click) || (i_release==i_click+1 && j_release==j_click)){
+
+          switch_candy(i_click, j_click, i_release, j_release); //Troca posição doces
+          make_point = board_check();                           //Testa se foi marcado ponto
+          switch_candy(i_click, j_click, i_release, j_release); //Desfaz troca
+
+          //Se foi marcado ponto, movimenta
+          if (make_point){
+            board_block = 1;                      //Bloqueia board
+            switch_done = 0;
+            i_clk = i_click; j_clk = j_click;         //Posição do doce clicado
+            i_rls = i_release; j_rls = j_release;     //Posição do doce solto
+            x_clk = board[i_click][j_click].x;        //Posição do click
+            y_clk = board[i_click][j_click].y;        //Posição do click
+            x_rls = board[i_release][j_release].x;    //Posição do release
+            y_rls = board[i_release][j_release].y;    //Posição do release
+          }
+        }
       }
     }
-  }
 
-  board_check();
+    board_flush();
+  }
 }
 
 void board_draw()
@@ -572,7 +655,6 @@ int main()
         stars_update();
         board_update();
         //mouse_pointer_update();
-        //printf("Score: %d\n", game_score.score);
 
         if(key[ALLEGRO_KEY_ESCAPE])
           done = true;

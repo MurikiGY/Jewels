@@ -6,3 +6,7 @@
 
 # Paradoxo da troca de doces
   - A função de verificação de integridade da matriz retornaria 1 se a matriz fosse remanejada e 0 do contrario, como a matriz ja está integra, a função retorna 0. Para que haja a troca das posições dos doces, é feita uma verificação se a função retorna 1, se sim a troca é feita, se não nada é alterado. Porém como a função sempre retorna 0, nada é alterado.
+
+# Queda dos doces
+  - Para implementar a queda dos doces há algumas questões a serem resolvidas. Algoritmo: atualiza posição dos doces e então desenha.
+  Solução: Fazer uma matriz secundaria?
