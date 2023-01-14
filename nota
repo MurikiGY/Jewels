@@ -8,8 +8,11 @@
   - A função de verificação de integridade da matriz retornaria 1 se a matriz fosse remanejada e 0 do contrario, como a matriz ja está integra, a função retorna 0. Para que haja a troca das posições dos doces, é feita uma verificação se a função retorna 1, se sim a troca é feita, se não nada é alterado. Porém como a função sempre retorna 0, nada é alterado.
 
 # Queda dos doces
-  - Para implementar a queda dos doces há algumas questões a serem resolvidas. Algoritmo: atualiza posição dos doces e então desenha.
+  - Para implementar a queda dos doces há algumas questões a serem resolvidas. Loop: atualiza posição dos doces e então desenha.
   Solução: Fazer uma matriz secundaria?
 
 # Algoritmo de doces
-  - 
+  - Se houve um click e um release e um for do lado do outro, <trava o board>, board_switch_candy = 1.
+  Dentro do board_update se board_switch_candy = 1 <tem que trocar doces>, testa se terminou de trocar, se sim testa se marcou ponto, se não movimenta.
+  Se marcou ponto, board_candy_fall = 1; e marca onte tem que atualizar.
+  Se board_switch_candy = 0, testa se board_candy_fall = 1, se sim desenha queda, se não pega informações do mouse.
