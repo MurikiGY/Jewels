@@ -469,6 +469,7 @@ int board_flush()
   return point;
 }
 
+//Retorna se tem sequencia de três
 int board_check()
 {
   //Verifica horizontal
@@ -504,8 +505,6 @@ void board_update()
 {
   if (board_block){ //Se board travado
     // Movimenta troca, e a queda dos doces
-    //i_clk, j_clk me dizem qual o doce de origem
-    //i_rls, j_rls me dizem qual o doce de destino
     
     //Testa se terminou de movimentar
     if ( board[i_clk][j_clk].x == x_rls && board[i_clk][j_clk].y == y_rls &&
@@ -516,12 +515,10 @@ void board_update()
       board[i_clk][j_clk].y = y_clk;    //Restaura posições originais
       board[i_rls][j_rls].x = x_rls;    //Restaura posições originais
       board[i_rls][j_rls].y = y_rls;    //Restaura posições originais
-      i_clk = -1;
-      j_clk = -1;
-      i_rls = -1;
-      j_rls = -1;
-      x_clk = -1;
-      y_clk = -1;
+      i_clk = -1; j_clk = -1;
+      i_rls = -1; j_rls = -1;
+      x_clk = -1; y_clk = -1;
+      x_rls = -1; y_rls = -1;
     }
 
     int horizontal, vertical;
@@ -529,52 +526,48 @@ void board_update()
     vertical = i_rls - i_clk;     //Calcula mov. cima ou baixo
 
     if ( horizontal > 0 ){         //Movimenta click pra direita
-      board[i_clk][j_clk].x++;
-      board[i_rls][j_rls].x--;
+      board[i_clk][j_clk].x+=2;
+      board[i_rls][j_rls].x-=2;
     } else if ( horizontal < 0 ){    //Movimenta click para esquerda
-        board[i_clk][j_clk].x--;
-        board[i_rls][j_rls].x++;
+        board[i_clk][j_clk].x-=2;
+        board[i_rls][j_rls].x+=2;
     } else if ( vertical > 0 ){      //Movimenta click para baixo
-        board[i_clk][j_clk].y++;
-        board[i_rls][j_rls].y--;
+        board[i_clk][j_clk].y+=2;
+        board[i_rls][j_rls].y-=2;
     } else if ( vertical < 0 ){      //Movimenta click para cima
-        board[i_clk][j_clk].y--;
-        board[i_rls][j_rls].y++;
+        board[i_clk][j_clk].y-=2;
+        board[i_rls][j_rls].y+=2;
     }
 
   } else {    //Board não bloqueado, pega informações do mouse
-    int i_click, j_click;
-    int i_release, j_release;
     
     //Calcula coordenadas do doce clicado na matriz
-    i_click = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
-    j_click = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
-    i_release = (mouse.y_release - Y_OFFSET)/CANDY_SIZE;
-    j_release = (mouse.x_release - X_OFFSET)/CANDY_SIZE;
+    i_clk = (mouse.y_click - Y_OFFSET)/CANDY_SIZE;
+    j_clk = (mouse.x_click - X_OFFSET)/CANDY_SIZE;
+    i_rls = (mouse.y_release - Y_OFFSET)/CANDY_SIZE;
+    j_rls = (mouse.x_release - X_OFFSET)/CANDY_SIZE;
 
     int make_point = 0;
     //Se o click foi no tabuleiro
-    if ((i_click > -1 && i_click < BOARD_N) && (j_click > -1 && j_click < BOARD_N)){
+    if ((i_clk > -1 && i_clk < BOARD_N) && (j_clk > -1 && j_clk < BOARD_N)){
       //Se o release foi no tabuleiro
-      if ((i_release > -1 && i_release < BOARD_N) && (j_release > -1 && j_release < BOARD_N)){
+      if ((i_rls > -1 && i_rls < BOARD_N) && (j_rls > -1 && j_rls < BOARD_N)){
         //Se o release foi ao lado do click
-        if ((i_release==i_click && j_release==j_click-1) || (i_release==i_click && j_release==j_click+1) ||
-            (i_release==i_click-1 && j_release==j_click) || (i_release==i_click+1 && j_release==j_click)){
+        if ((i_rls==i_clk && j_rls==j_clk-1) || (i_rls==i_clk && j_rls==j_clk+1) ||
+            (i_rls==i_clk-1 && j_rls==j_clk) || (i_rls==i_clk+1 && j_rls==j_clk)){
 
-          switch_candy(i_click, j_click, i_release, j_release); //Troca posição doces
+          switch_candy(i_clk, j_clk, i_rls, j_rls); //Troca posição doces
           make_point = board_check();                           //Testa se foi marcado ponto
-          switch_candy(i_click, j_click, i_release, j_release); //Desfaz troca
+          switch_candy(i_clk, j_clk, i_rls, j_rls); //Desfaz troca
 
           //Se foi marcado ponto, movimenta
           if (make_point){
             board_block = 1;                      //Bloqueia board
-            switch_done = 0;
-            i_clk = i_click; j_clk = j_click;         //Posição do doce clicado
-            i_rls = i_release; j_rls = j_release;     //Posição do doce solto
-            x_clk = board[i_click][j_click].x;        //Posição do click
-            y_clk = board[i_click][j_click].y;        //Posição do click
-            x_rls = board[i_release][j_release].x;    //Posição do release
-            y_rls = board[i_release][j_release].y;    //Posição do release
+            switch_done = 0;                      //Troca não concluida
+            x_clk = board[i_clk][j_clk].x;        //Posição do click
+            y_clk = board[i_clk][j_clk].y;        //Posição do click
+            x_rls = board[i_rls][j_rls].x;        //Posição do release
+            y_rls = board[i_rls][j_rls].y;        //Posição do release
           }
         }
       }
