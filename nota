@@ -2,7 +2,7 @@
   - Corrigido, tinha colocado uma variavel de allegro_bitmap para cada posição da matriz, alterei para um vetor de sprites.
 
 # Ao clicar no doce, o typo do doce não eh alterado, o mouse funciona perfeitamente?
-  - Na verdade eh alterado, porém como estava com a função between ele alterava para o mesmo tipo de doce. Mouse funcionando normalmente.
+  - Na verdade eh alterado, porém como estava com a função between ele alterava para o mesmo tipo de doce. Mouse funcionando normal.
 
 # Paradoxo da troca de doces
   - A função de verificação de integridade da matriz retornaria 1 se a matriz fosse remanejada e 0 do contrario, como a matriz ja está integra, a função retorna 0. Para que haja a troca das posições dos doces, é feita uma verificação se a função retorna 1, se sim a troca é feita, se não nada é alterado. Porém como a função sempre retorna 0, nada é alterado.
@@ -12,7 +12,28 @@
   Solução: Fazer uma matriz secundaria?
 
 # Algoritmo de doces
-  - Se houve um click e um release e um for do lado do outro, <trava o board>, board_switch_candy = 1.
-  Dentro do board_update se board_switch_candy = 1 <tem que trocar doces>, testa se terminou de trocar, se sim testa se marcou ponto, se não movimenta.
-  Se marcou ponto, board_candy_fall = 1; e marca onte tem que atualizar.
+  - Implementado em maquina de estados. Se houve um click e release e for do lado do outro, <trava o board>, board_switch_candy = 1.
+  Dentro do board_switch_candy = 1 <tem que trocar doces>, testa se terminou de trocar, se sim testa se marcou ponto, se não movimenta.
+  Se marcou ponto, board_candy_fall = 1; e marca onde tem que atualizar.
   Se board_switch_candy = 0, testa se board_candy_fall = 1, se sim desenha queda, se não pega informações do mouse.
+  ** Considerar em alterar depois para um switch (board_state) case switch_candy:; case candy_fall:; case get_mouse:;
+
+# Queda dos doces 2
+  - Eu tenho a posição do click, do release, suas coordenadas e um board desregular. Como fazer suas peças caírem naturalmente? Além disso tem que cair pra todos os doces, não só os que eu clicar.
+  - Algoritmo, procura desregularidade,
+    Se achar, muda condicionais para tratar a desregularidade.
+    Se não achar, muda condicionais para pegar nova entrada do mouse.
+  - Tratamento da desregularidade: i_candy_fall, j_candy_fall, k_candy_fall e l_candy_fall são coordenadas de queda.
+    Se horizontal, trata horizontal.
+      Depois que os doces terminarem de cair, (até então os matchpoints não estão desenhados e os doces desceram)
+      Atualiza os tipos
+      Restaura as posições
+      termina.
+    Se vertical, trata vertical.
+
+
+# Percorrer matriz
+  - for (int i=0; i<BOARD_N-2 ;i++)   não funciona muito bem pois não eh feito o teste nas ultimas linhas de baixo e da direita
+      for (int j=0; j<BOARD_N-2 ;j++) 
+
+# Ta dando falha de segmentação no board_draw

@@ -337,7 +337,7 @@ void score_deinit()
 
 void score_draw ()
 {
-  //al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
+  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
   al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, game_score.str_score);
 }
 
@@ -347,6 +347,7 @@ typedef struct candy
 {
   int x, y;
   int type;
+  int draw;
 } candy;
 
 //Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
@@ -359,13 +360,16 @@ typedef struct candy
 
 candy board[BOARD_N][BOARD_N];      //Matriz de doces
 ALLEGRO_BITMAP *candy_sprite[5];    //Vetor de sprites
-int board_switch_candy;     //Testa se deve movimentar troca de doces
-int board_candy_fall;       //Testa se deve movimentar queda de doces
-int i_clk, j_clk;           //click candy
-int i_rls, j_rls;           //release candy
-int x_clk, y_clk;           //Coordenadas do click
-int x_rls, y_rls;           //Coordenadas do release
-int doce_indo;              //Doce indo ou vindo
+int board_switch_candy;             //Testa se deve movimentar troca de doces
+int board_candy_fall;               //Testa se deve movimentar queda de doces
+int i_clk, j_clk;                   //click candy
+int i_rls, j_rls;                   //release candy
+int x_clk, y_clk;                   //Coordenadas do click
+int x_rls, y_rls;                   //Coordenadas do release
+int doce_indo;                      //Doce indo ou vindo
+int i_candy_fall, j_candy_fall;     //Coordenadas da queda do doce
+int k_candy_fall, l_candy_fall;     //Coordenadas da queda do doce
+int candy_fall_done;                //Deve descer doces
 
 void board_init()
 {
@@ -383,6 +387,7 @@ void board_init()
       board[i][j].x = X_OFFSET + x_aux;
       board[i][j].y = Y_OFFSET + y_aux;
       board[i][j].type = between(0, 5);
+      board[i][j].draw = 1;
       x_aux += CANDY_SIZE;   //Muda x para proximo doce da direita
     }
     x_aux = 0;
@@ -394,6 +399,11 @@ void board_init()
   i_clk = -1; j_clk = -1;
   i_rls = -1; j_rls = -1;
   doce_indo = 0;
+  candy_fall_done = 1;
+  i_candy_fall = -1;
+  j_candy_fall = -1;
+  k_candy_fall = -1;
+  l_candy_fall = -1;
 }
 
 void board_deinit()
@@ -456,8 +466,7 @@ int board_flush()
         //Na coluna j, de i até k-1 os doces são iguais
         while (i > 0){
           board[k-1][j].type = board[i-1][j].type;
-          k--;
-          i--;
+          k--; i--;
         }
         //Gera doces restantes
         while (k > 0){
@@ -535,9 +544,137 @@ void switch_movement(int direction)
 void clean_variables()
 {
   i_clk = -1; j_clk = -1;
-  i_rls = -1; j_rls = -1;
   x_clk = -1; y_clk = -1;
+  i_rls = -1; j_rls = -1;
   x_rls = -1; y_rls = -1;
+}
+
+void candy_drop()
+{
+  //Se ja desceu todos os doces
+  if ( candy_fall_done ){
+
+    //Busca por inconsistencia horizontal
+    for (int i=0; i<BOARD_N ;i++)
+      for (int j=0; j<BOARD_N-2 ;j++){
+        int tipo = board[i][j].type;
+        if ( board[i][j+1].type == tipo && board[i][j+2].type == tipo ){  //Triple candy
+          int k = j+3;
+          while ( board[i][k].type == tipo && k < BOARD_N )
+            k++;
+          i_candy_fall = i; l_candy_fall = -1;        //Coordenadas de queda
+          j_candy_fall = j; k_candy_fall = k;         //Coordenadas de queda
+          candy_fall_done = 0;                        //Não terminou de cair
+          for (; j<k ;j++)                            //Esconde doces sequenciados
+            board[i][j].draw = 0;
+          return;
+        }}
+
+    //Busca por inconsistencia na vertical
+    for (int i=0; i<BOARD_N-2 ;i++)
+      for (int j=0; j<BOARD_N ;j++){
+        int tipo = board[i][j].type;
+        if ( board[i+1][j].type == tipo && board[i+2][j].type == tipo ){ //Triple candy
+          int k = i+3;
+          while ( board[k][j].type == tipo && k < BOARD_N )
+            k++;
+          i_candy_fall = i; l_candy_fall = k;         //Coordenadas de queda
+          j_candy_fall = j; k_candy_fall = -1;        //Coordenadas de queda
+          candy_fall_done = 0;                        //Nao terminou de cair
+          for (; i<k; i++)                            //Esconde os doces sequenciados
+            board[i][j].draw = 0;
+          return;
+        }}
+    
+    //Desceu todos os doces e sem mais irregularidades
+    board_candy_fall = 0;
+
+  } else {  //Testa e Desenha queda
+
+    if ( l_candy_fall == -1 ){  //Se matchpoint horizontal
+      //Se matchpoint na primeira linha, o que da bosta
+      if ( i_candy_fall == 0 ){
+        for (int j=j_candy_fall; j<k_candy_fall ;j++){
+          board[i_candy_fall][j].type = between(0, 5);
+          board[i_candy_fall][j].draw = 1;
+        }
+        i_candy_fall = -1; j_candy_fall = -1;
+        l_candy_fall = -1; k_candy_fall = -1;
+        candy_fall_done = 1;
+      }
+      
+      if ( board[i_candy_fall-1][j_candy_fall].y == board[i_candy_fall][j_candy_fall].y ){  //Se terminou de descer
+        
+        //Restaura posição y horizontal
+        for (int i=i_candy_fall-1; i>-1 ;i--)
+          for (int j=j_candy_fall; j<k_candy_fall ;j++)
+            board[i][j].y-=CANDY_SIZE;
+
+        //Permite renderizar horizontal
+        for (int j=j_candy_fall; j<k_candy_fall ;j++)
+            board[i_candy_fall][j].draw = 1;
+
+        //Atualiza tipo do doce horizontal
+        for (int i=i_candy_fall; i>0 ;i--)
+          for (int j=j_candy_fall; j<k_candy_fall ;j++)
+            board[i][j].type = board[i-1][j].type;
+        for (int j=j_candy_fall; j<k_candy_fall ;j++)
+          board[0][j].type = between(0, 5);
+        
+        i_candy_fall = -1; j_candy_fall = -1;
+        l_candy_fall = -1; k_candy_fall = -1;
+        candy_fall_done = 1;  //Termina de cair doces, checa integridade
+
+      } else {  //Desce doces horizontal
+
+        for (int i=i_candy_fall-1; i>-1 ;i--)
+          for (int j=j_candy_fall; j<k_candy_fall ;j++)
+            board[i][j].y+=5;
+
+      }
+
+    } else if ( k_candy_fall == -1 ){ //Se matchpoint vertical
+
+      //Testando a bosta do matchpoint ser na linha zero
+      if ( i_candy_fall == 0 ){
+        for (int i=i_candy_fall; i<l_candy_fall ;i++){
+          board[i][j_candy_fall].draw = 1;
+          board[i][j_candy_fall].type = between(0, 5);
+        }
+        i_candy_fall = -1; j_candy_fall = -1;
+        l_candy_fall = -1; k_candy_fall = -1;
+        candy_fall_done = 1;
+      }
+      
+      if ( board[i_candy_fall-1][j_candy_fall].y == board[l_candy_fall-1][j_candy_fall].y ){  //Se terminou de descer
+
+        //Restaura posição do y vertical
+        for (int i=i_candy_fall-1; i>-1 ;i--)
+          board[i][j_candy_fall].y -= CANDY_SIZE * (l_candy_fall - i_candy_fall); //Restaura y
+        
+        //Permite renderizar vertical
+        for (int i=i_candy_fall; i<l_candy_fall ;i++)
+          board[i][j_candy_fall].draw = 1;
+
+        //Atualiza tipo de doce vertical
+        int n_candy = l_candy_fall - i_candy_fall;
+        for (int i=l_candy_fall-1; i>-1 ;i--)
+          if ( i > n_candy-1 )
+            board[i][j_candy_fall].type = board[--i_candy_fall][j_candy_fall].type;
+          else
+            board[i][j_candy_fall].type = between(0, 5);
+
+        i_candy_fall = -1; j_candy_fall = -1;
+        l_candy_fall = -1; k_candy_fall = -1;
+        candy_fall_done = 1;  //Termina de cair doces, checa integridade
+
+        return;
+      } else {  //Desce doces vertical
+        for (int i=i_candy_fall-1; i>-1 ;i--)
+          board[i][j_candy_fall].y+=5;
+      }
+    }
+  }
 }
 
 void board_update()
@@ -550,7 +687,6 @@ void board_update()
       if ( board[i_clk][j_clk].x == x_rls && board[i_clk][j_clk].y == y_rls &&
            board[i_rls][j_rls].x == x_clk && board[i_rls][j_rls].y == y_clk ){
         switch_candy(i_clk, j_clk, i_rls, j_rls); //Troca tipo dos doces
-        
         //Se marcou ponto
         if ( board_check() ){
           doce_indo = 0;                    //Doce não esta mais indo
@@ -566,30 +702,26 @@ void board_update()
           doce_indo = 0;
         }
       }
-
-      //Movimenta indo
+      //Movimenta doce indo
       switch_movement(1);
-
     } else {  //Doce voltando
-      
       //Se terminou de voltar a posição original
       if ( board[i_clk][j_clk].x == x_clk && board[i_clk][j_clk].y == y_clk &&
            board[i_rls][j_rls].x == x_rls && board[i_rls][j_rls].y == y_rls ){
         board_switch_candy = 0;         //Terminou de trocar, pegar mouse de novo
         clean_variables();
       }
-
-      //Movimenta voltando
+      //Movimenta doce voltando
       switch_movement(-1);
-
     }
 
   } else if ( board_candy_fall ){   //Queda dos doces
 
-    while ( board_check() )
-      board_flush();
+    candy_drop();
+    //while ( board_check() )
+    //  board_flush();
 
-    board_candy_fall = 0;           //Terminou de descer doces
+    //board_candy_fall = 0;           //Terminou de descer doces
 
   } else {  //Pega informações do mouse
     //Calcula coordenadas do doce clicado na matriz
@@ -620,7 +752,9 @@ void board_draw()
 {
   for(int i=0; i<BOARD_N ;i++)
     for(int j=0; j<BOARD_N ;j++)
-      al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
+      if ( board[i][j].draw )
+        al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
+
 }
 
 
@@ -666,6 +800,8 @@ int main()
   bg_init();
   stars_init();
   board_init();
+  while ( board_check() )
+    board_flush();
   score_init();
   //mouse_pointer_init();
 
