@@ -330,13 +330,7 @@ void score_draw (SCORE *game_score, ALLEGRO_FONT *font){
 
 }
 
-// --- BOARD ---
-
-typedef struct jewel {
-  int x, y;       //Coordenadas
-  int type;       //Tipo do doce
-  int draw;       //Booleano de renderizar
-} JEWEL;
+// --- Maquina de estados ---
 
 typedef enum state_board {
   BOARD_NEW_PLAY = 0,
@@ -344,8 +338,40 @@ typedef enum state_board {
   BOARD_JEWEL_FALL
 } STATE_BOARD;
 
+typedef enum state_jewel {
+  JEWEL_GO = 10,
+  JEWEL_BACK
+} STATE_JEWEL;
+
+typedef struct states {
+  STATE_BOARD board_state;          //Maquina de estado do tabuleiro
+  STATE_JEWEL jewel_state;          //Maquina de estado da joia
+  int x_jewel_clk, y_jewel_clk;     //Coordenadas da joia clicada
+  int x_jewel_rls, y_jewel_rls;     //Coordenadas da joia solta
+} STATES;
+
+void state_init(STATES *global_states){
+
+  global_states->board_state = BOARD_NEW_PLAY;
+  global_states->jewel_state = JEWEL_GO;
+  global_states->x_jewel_clk = -1;
+  global_states->y_jewel_clk = -1;
+  global_states->x_jewel_rls = -1;
+  global_states->y_jewel_rls = -1;
+
+}
+
+// --- BOARD ---
+
+typedef struct jewel {
+  int x, y;                         //Coordenadas
+  int type;                         //Tipo do doce
+  int draw;                         //Booleano de renderizar
+} JEWEL;
+
 //Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
 //Board_y [-- 140 (score) -- : -- 560 (board) -- : -- 20 (offset) --]
+//        [       70 (jewel) :                                      ]
 #define X_OFFSET      80             //Limites do tabuleiro
 #define Y_OFFSET      140            //Espaçamento do score
 #define JEWEL_SIZE    70             //Tamanho ocupado pelo doce
@@ -408,8 +434,30 @@ void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite){
 
 }
 
+//Retorna se tem sequencia de três
+int board_check(JEWEL **board){
+
+  //Verifica horizontal
+  for (int i=0; i<BOARD_N ;i++)
+    for (int j=0; j<BOARD_N-2 ;j++){
+      int tipo = board[i][j].type;
+      if (board[i][j+1].type == tipo && board[i][j+2].type == tipo)
+        return 1;
+    }
+
+  //Verifica vertical
+  for (int i=0; i<BOARD_N-1 ;i++)
+    for (int j=0; j<BOARD_N ;j++){
+      int tipo = board[i][j].type;
+      if (board[i+1][j].type == tipo && board[i+2][j].type == tipo)
+        return 1;
+    }
+
+  return 0; //Não foi marcado ponto
+}
+
 //Troca joias do board de posicao
-void switch_jewel(JEWEL **board, int x, int y, int z, int w){
+void switch_jewel_position(JEWEL **board, int x, int y, int z, int w){
 
   int tipo = board[x][y].type;
   board[x][y].type = board[z][w].type;
@@ -417,10 +465,77 @@ void switch_jewel(JEWEL **board, int x, int y, int z, int w){
 
 }
 
+//Movimenta troca de doces
+void switch_movement(JEWEL **board, int i_clk, int j_clk, int i_rls, int j_rls, int direction){
 
-void board_update(JEWEL **board, STATE_BOARD *state, MOUSE *mouse){
+  int horizontal, vertical;
+  if ( direction > 0 ){             //Movimenta indo
+    horizontal = j_rls - j_clk;
+    vertical = i_rls - i_clk;
+  } else {                          //Movimenta voltando
+    horizontal = j_clk - j_rls;
+    vertical = i_clk - i_rls;
+  }
 
-  switch ( *state ){
+  if ( horizontal > 0 ){            
+    board[i_clk][j_clk].x+=5;       //Movimenta click pra direita
+    board[i_rls][j_rls].x-=5;       //Movimenta release para esquerda
+  } else if ( horizontal < 0 ){
+      board[i_clk][j_clk].x-=5;     //Movimenta click para esquerda
+      board[i_rls][j_rls].x+=5;     //Movimenta release para direita
+  } else if ( vertical > 0 ){
+      board[i_clk][j_clk].y+=5;     //Movimenta click para baixo
+      board[i_rls][j_rls].y-=5;     //Movimenta release para cima
+  } else if ( vertical < 0 ){
+      board[i_clk][j_clk].y-=5;     //Movimenta click para cima
+      board[i_rls][j_rls].y+=5;     //Movimenta release para baixo
+  }
+
+}
+
+//Troca joias de posição, renderiza e testa se deve desfazer
+void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse){
+
+  switch ( global_state->jewel_state ){
+    case JEWEL_GO:
+      //Testa de terminou de movimentar
+      if ( board[mouse->i_clk][mouse->j_clk].x == global_state->x_jewel_rls && 
+           board[mouse->i_clk][mouse->j_clk].y == global_state->y_jewel_rls &&
+           board[mouse->i_rls][mouse->j_rls].x == global_state->x_jewel_clk && 
+           board[mouse->i_rls][mouse->j_rls].y == global_state->y_jewel_clk ){
+        switch_jewel_position(board, mouse->i_clk, mouse->j_clk, mouse->i_rls, mouse->j_rls);
+        if ( board_check(board) ){                                            //Se marcou ponto
+          global_state->board_state = BOARD_JEWEL_FALL;                       //Busca nova jogada
+          board[mouse->i_clk][mouse->j_clk].x = global_state->x_jewel_clk;    //Restaura coordenadas
+          board[mouse->i_clk][mouse->j_clk].y = global_state->y_jewel_clk;    //Restaura coordenadas
+          board[mouse->i_rls][mouse->j_rls].x = global_state->x_jewel_rls;    //Restaura coordenadas
+          board[mouse->i_rls][mouse->j_rls].y = global_state->y_jewel_rls;    //Restaura coordenadas
+        } else {                                                              //Se não marcou ponto
+          switch_jewel_position(board, mouse->i_clk, mouse->j_clk, mouse->i_rls, mouse->j_rls);
+          global_state->jewel_state = JEWEL_BACK;
+        }
+      } else
+      //Renderiza joia indo
+      switch_movement(board, mouse->i_clk, mouse->j_clk, mouse->i_rls, mouse->j_rls, 1);
+      break;
+
+    case JEWEL_BACK:
+      //Se terminou de voltar a posição original, busca nova jogada
+      if ( board[mouse->i_clk][mouse->j_clk].x == global_state->x_jewel_clk && 
+           board[mouse->i_clk][mouse->j_clk].y == global_state->y_jewel_clk &&
+           board[mouse->i_rls][mouse->j_rls].x == global_state->x_jewel_rls && 
+           board[mouse->i_rls][mouse->j_rls].y == global_state->y_jewel_rls )
+        global_state->board_state = BOARD_NEW_PLAY;
+      else
+        switch_movement(board, mouse->i_clk, mouse->j_clk, mouse->i_rls, mouse->j_rls, -1);
+      break;
+  }
+
+}
+
+void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse){
+
+  switch ( global_state->board_state ){
     case BOARD_NEW_PLAY:    //Carrega nova jogada
       //Calcula coordenadas do doce clicado na matriz
       mouse->i_clk = (mouse->y_clk - Y_OFFSET)/JEWEL_SIZE;
@@ -440,19 +555,23 @@ void board_update(JEWEL **board, STATE_BOARD *state, MOUSE *mouse){
               (mouse->i_rls==mouse->i_clk-1 && mouse->j_rls==mouse->j_clk) || 
               (mouse->i_rls==mouse->i_clk+1 && mouse->j_rls==mouse->j_clk)){
             (mouse->i_clk)++; (mouse->i_rls)++;     //Correção da linha 0 invisível
-            *state = BOARD_SWITCH_JEWEL;
+            global_state->board_state = BOARD_SWITCH_JEWEL;
+            global_state->x_jewel_clk = board[mouse->i_clk][mouse->j_clk].x;      //Salva as coordenadas da troca
+            global_state->y_jewel_clk = board[mouse->i_clk][mouse->j_clk].y;      //Salva as coordenadas da troca
+            global_state->x_jewel_rls = board[mouse->i_rls][mouse->j_rls].x;      //Salva as coordenadas da troca
+            global_state->y_jewel_rls = board[mouse->i_rls][mouse->j_rls].y;      //Salva as coordenadas da troca
+
           }
       break;
 
     case BOARD_SWITCH_JEWEL:    //Troca joias de posição
-      switch_jewel(board, mouse->i_clk, mouse->j_clk, mouse->i_rls, mouse->j_rls);
-      *state = BOARD_JEWEL_FALL;
+      switch_jewels(board, global_state, mouse);
       break;
 
     case BOARD_JEWEL_FALL:      //Desce joias do matchpoint
       mouse->i_clk = -1; mouse->j_clk = -1;
       mouse->i_rls = -1; mouse->j_rls = -1;
-      *state = BOARD_NEW_PLAY;
+      global_state->board_state = BOARD_NEW_PLAY;
       break;
   }
 
@@ -466,7 +585,6 @@ void board_draw(JEWEL **board, ALLEGRO_BITMAP **candy_sprite){
         al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
 
 }
-
 
 
 // --- Main ---
@@ -504,8 +622,8 @@ int main(){
   game_score = score_init();
   JEWEL **board; ALLEGRO_BITMAP *candy_sprite[5];         //Variavel do tabuleiro e vetor de sprites
   board = board_init(candy_sprite);
-  STATE_BOARD board_state;                                //Variave de estado do tabuleiro
-  board_state = BOARD_NEW_PLAY;
+  STATES global_state;                                    //Variavel de maquina de estados
+  state_init(&global_state);
 
   //Registradores de evento
   al_register_event_source(queue, al_get_keyboard_event_source());
@@ -526,7 +644,7 @@ int main(){
       case ALLEGRO_EVENT_TIMER:
         //Update functions
         stars_update(stars);
-        board_update(board, &board_state, mouse);
+        board_update(board, &global_state, mouse);
 
         if ( key[ALLEGRO_KEY_ESCAPE] )
           done = true;
