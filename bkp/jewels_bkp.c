@@ -639,10 +639,8 @@ void board_update(){
       //Testa se terminou de movimentar
       if ( board[i_clk][j_clk].x == x_rls && board[i_clk][j_clk].y == y_rls &&
            board[i_rls][j_rls].x == x_clk && board[i_rls][j_rls].y == y_clk ){
-
         switch_candy(i_clk, j_clk, i_rls, j_rls); //Troca tipo dos doces
-        //Se marcou ponto
-        if ( board_check() ){
+        if ( board_check() ){               //Se marcou ponto
           doce_indo = 0;                    //Doce não esta mais indo
           board_switch_candy = 0;           //Desativa troca de doces
           board_candy_fall = 1;             //Ativa descida dos doces
@@ -655,24 +653,17 @@ void board_update(){
           switch_candy(i_clk, j_clk, i_rls, j_rls); //Troca tipo dos doces
           doce_indo = 0;
         }
-
       }
-
-      //Movimenta doce indo
-      switch_movement(1);
-
+      switch_movement(1);   //Movimenta doce indo
     } else {  //Doce voltando
-
       //Se terminou de voltar a posição original
       if ( board[i_clk][j_clk].x == x_clk && board[i_clk][j_clk].y == y_clk &&
            board[i_rls][j_rls].x == x_rls && board[i_rls][j_rls].y == y_rls ){
         board_switch_candy = 0;         //Terminou de trocar, pegar mouse de novo
         clean_variables();
       }
-
       //Movimenta doce voltando
       switch_movement(-1);
-
     }
 
   } else if ( board_candy_fall ){   //Queda dos doces

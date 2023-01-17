@@ -25,21 +25,18 @@ void must_init(bool test, const char *description){
 
   printf("couldn't initialize %s\n", description);
   exit(1);
-
 }
 
 //Inteiros aleatorios
 int between(int lo, int hi){
 
   return lo + (rand() % (hi - lo));
-
 }
 
 //Float aleatorios
 float between_f(float lo, float hi){
 
   return lo + ((float)rand() / (float)RAND_MAX) * (hi - lo);
-
 }
 
 // --- ALLEGRO SYSTEM ---
@@ -65,7 +62,6 @@ void display_init(ALLEGRO_BITMAP **buff, ALLEGRO_DISPLAY **disp){
 
   *disp = al_create_display(DISP_W, DISP_H);
   must_init(*disp, "Display");
-  
 }
 
 //Destroy variaveis de buffer e display
@@ -73,14 +69,12 @@ void display_deinit(ALLEGRO_BITMAP **buff, ALLEGRO_DISPLAY **disp){
 
   al_destroy_bitmap(*buff);
   al_destroy_display(*disp);
-
 }
 
 //Buffer target
 void display_pre_draw(ALLEGRO_BITMAP **buff){
 
   al_set_target_bitmap(*buff);
-
 }
 
 //Buffer commit
@@ -90,7 +84,6 @@ void display_post_draw(ALLEGRO_BITMAP **buff, ALLEGRO_DISPLAY **disp){
   al_draw_scaled_bitmap(*buff, 0, 0, BUFFER_W, BUFFER_H, 0, 0, DISP_W, DISP_H, 0);
 
   al_flip_display();
-
 }
 
 // --- FONTE ---
@@ -103,14 +96,12 @@ void font_init(ALLEGRO_FONT **font){
 
   *font = al_load_font("resources/fonts/MASLITE.otf", 36, 0);
   must_init(*font, "Fonte MASLITE");
-
 }
 
 //Destroi variavel de fonte
 void font_deinit(ALLEGRO_FONT **font){
 
   al_destroy_font(*font);
-
 }
 
 // --- AUDIO ---
@@ -127,13 +118,11 @@ void audio_init(ALLEGRO_AUDIO_STREAM **bg_music){
   
   al_set_audio_stream_playmode(*bg_music, ALLEGRO_PLAYMODE_LOOP);
   al_attach_audio_stream_to_mixer(*bg_music, al_get_default_mixer());
-
 }
 
 void audio_deinit(ALLEGRO_AUDIO_STREAM **bg_music){
 
   al_destroy_audio_stream(*bg_music);
-
 }
 
 // --- KEYBOARD ---
@@ -145,7 +134,6 @@ void keyboard_init(unsigned char key[]){
 
   must_init(al_install_keyboard(), "keyboard");
   memset(key, 0, sizeof(unsigned char));
-
 }
 
 void keyboard_update(ALLEGRO_EVENT* event, unsigned char key[]){
@@ -164,7 +152,6 @@ void keyboard_update(ALLEGRO_EVENT* event, unsigned char key[]){
       key[event->keyboard.keycode] &= KEY_RELEASED;
       break;
   }
-
 }
 
 // --- MOUSE ---
@@ -188,13 +175,11 @@ MOUSE *mouse_init(){
   mouse->i_rls = -1; mouse->j_rls = -1;
 
   return mouse;
-
 }
 
 void mouse_deinit(MOUSE *mouse){
 
   free(mouse);
-
 }
 
 void mouse_update(ALLEGRO_EVENT* event, MOUSE *mouse){
@@ -220,7 +205,6 @@ void mouse_update(ALLEGRO_EVENT* event, MOUSE *mouse){
       mouse->y_rls = event->mouse.y;
       break;
   }
-
 }
 
 
@@ -232,19 +216,16 @@ void background_init(ALLEGRO_BITMAP **bg){
 
   *bg = al_load_bitmap("resources/background/bg.jpg");
   must_init(*bg, "Background");
-
 }
 
 void background_deinit(ALLEGRO_BITMAP **bg){
 
   al_destroy_bitmap(*bg);
-
 }
 
 void background_draw(ALLEGRO_BITMAP *bg){
 
   al_draw_bitmap(bg, 0, 0, 0);
-
 }
 
 // --- STARS ---
@@ -263,7 +244,6 @@ void stars_init(STAR stars[]){
     stars[i].y = between_f(0, BUFFER_H);
     stars[i].speed = between_f(0.1, 1);
   }
-
 }
 
 //Destroi estrelas
@@ -277,7 +257,6 @@ void stars_update(STAR stars[]){
       stars[i].speed = between_f(0.1, 1);
     }
   }
-
 }
 
 void stars_draw(STAR stars[]){
@@ -287,7 +266,6 @@ void stars_draw(STAR stars[]){
     al_draw_pixel(star_x, stars[i].y, al_map_rgb_f(255,255,255));
     star_x += 2;
   }
-
 }
 
 // --- SCORE ---
@@ -314,20 +292,17 @@ SCORE *score_init(){
   game_score->x_global = 370; game_score->y_global = 70;
 
   return game_score;
-
 }
 
 void score_deinit(SCORE *game_score){
 
   free(game_score);
-
 }
 
 void score_draw (SCORE *game_score, ALLEGRO_FONT *font){
 
   al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
   al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, game_score->str_score);
-
 }
 
 // --- Maquina de estados ---
@@ -339,26 +314,35 @@ typedef enum state_board {
 } STATE_BOARD;
 
 typedef enum state_jewel {
-  JEWEL_GO = 10,
+  JEWEL_GO = 0,
   JEWEL_BACK
 } STATE_JEWEL;
+
+typedef enum state_fall {
+  TEST_FALL = 0,
+  HORIZONTAL_FALL,
+  VERTICAL_FALL
+} STATE_FALL;
 
 typedef struct states {
   STATE_BOARD board_state;          //Maquina de estado do tabuleiro
   STATE_JEWEL jewel_state;          //Maquina de estado da joia
+  STATE_FALL  fall_state;
   int x_jewel_clk, y_jewel_clk;     //Coordenadas da joia clicada
   int x_jewel_rls, y_jewel_rls;     //Coordenadas da joia solta
+  int i_jewel_fall, j_jewel_fall;   //coordenadas da queda
+  int k_jewel_fall, l_jewel_fall;
 } STATES;
 
-void state_init(STATES *global_states){
+void state_init(STATES *global_states) {
 
   global_states->board_state = BOARD_NEW_PLAY;
   global_states->jewel_state = JEWEL_GO;
-  global_states->x_jewel_clk = -1;
-  global_states->y_jewel_clk = -1;
-  global_states->x_jewel_rls = -1;
-  global_states->y_jewel_rls = -1;
-
+  global_states->fall_state  = TEST_FALL;
+  global_states->x_jewel_clk = -1; global_states->y_jewel_clk = -1;     //Troca de joias   
+  global_states->x_jewel_rls = -1; global_states->y_jewel_rls = -1;     //Troca de joias
+  global_states->i_jewel_fall = -1; global_states->j_jewel_fall = -1;   //Queda das joias
+  global_states->k_jewel_fall = -1; global_states->l_jewel_fall = -1;   //Queda das joias
 }
 
 // --- BOARD ---
@@ -416,22 +400,17 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   }
  
   return board;
-
 }
 
 void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite){
 
   //Destroi vetor de sprites
-  al_destroy_bitmap(candy_sprite[0]);
-  al_destroy_bitmap(candy_sprite[1]);
-  al_destroy_bitmap(candy_sprite[2]);
-  al_destroy_bitmap(candy_sprite[3]);
-  al_destroy_bitmap(candy_sprite[4]);
+  for (int i=0; i<5 ;i++)
+    al_destroy_bitmap(candy_sprite[i]);
 
-  //Desaloca memoria
+  //Desaloca matriz
   free(*board[0]);
   free(*board);
-
 }
 
 //Retorna se tem sequencia de três
@@ -462,7 +441,6 @@ void switch_jewel_position(JEWEL **board, int x, int y, int z, int w){
   int tipo = board[x][y].type;
   board[x][y].type = board[z][w].type;
   board[z][w].type = tipo;
-
 }
 
 //Movimenta troca de doces
@@ -490,7 +468,6 @@ void switch_movement(JEWEL **board, int i_clk, int j_clk, int i_rls, int j_rls, 
       board[i_clk][j_clk].y-=5;     //Movimenta click para cima
       board[i_rls][j_rls].y+=5;     //Movimenta release para baixo
   }
-
 }
 
 //Troca joias de posição, renderiza e testa se deve desfazer
@@ -530,8 +507,107 @@ void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse){
         switch_movement(board, mouse->i_clk, mouse->j_clk, mouse->i_rls, mouse->j_rls, -1);
       break;
   }
-
 }
+
+//Cascata de joias
+void jewel_fall(JEWEL **board, STATES *global_state, MOUSE *mouse){
+
+  switch ( global_state->fall_state ){
+    case TEST_FALL:
+      //Percorre matriz em busca de irregularidade
+      for (int i=1; i<BOARD_N+1 ;i++)
+        for (int j=0; j<BOARD_N-2 ;j++){
+          int tipo = board[i][j].type;
+          if ( board[i][j+1].type == tipo && board[i][j+2].type == tipo ){  //Matchpoint horizontal
+            int k = j+3;
+            while ( board[i][k].type == tipo && k < BOARD_N )
+              k++;
+            global_state->i_jewel_fall = i; global_state->j_jewel_fall = j;
+            global_state->k_jewel_fall = k; global_state->l_jewel_fall = -1;
+            global_state->fall_state = HORIZONTAL_FALL;
+            for (; j<k ;j++)    //Esconde doces sequenciados
+              board[i][j].draw = 0;
+            return; } }
+
+      for (int i=1; i<BOARD_N-1 ;i++)
+        for (int j=0; j<BOARD_N ;j++){
+          int tipo = board[i][j].type;
+          if ( board[i+1][j].type == tipo && board[i+2][j].type == tipo ){ //Triple candy
+            int k = i+3;
+            while ( board[k][j].type == tipo && k < BOARD_N )
+              k++;
+            global_state->i_jewel_fall = i; global_state->j_jewel_fall = j;
+            global_state->k_jewel_fall = -1; global_state->l_jewel_fall = k;
+            global_state->fall_state = VERTICAL_FALL;
+            for (; i<k ;i++)    //Esconde doces sequenciados
+              board[i][j].draw = 0;
+            return; } }
+      //Não achou inconsistencia
+      global_state->board_state = BOARD_NEW_PLAY;
+      break;
+
+    case HORIZONTAL_FALL:
+      //Se joia terminou de descer
+      if ( board[global_state->i_jewel_fall-1][global_state->j_jewel_fall].y == 
+           board[global_state->i_jewel_fall][global_state->j_jewel_fall].y ){
+        //Restaura posição do y horizontal
+        for (int i=global_state->i_jewel_fall; i>-1 ;i--)
+          for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
+            board[i][j].y -= JEWEL_SIZE;
+
+        //Permite renderizar horizontal
+        for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
+          board[global_state->i_jewel_fall][j].draw = 1;
+
+        //Atualiza tipo de doce horizontal
+        for (int i=global_state->i_jewel_fall; i>0 ;i--)
+          for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
+            board[i][j].type = board[i-1][j].type;
+        for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
+          board[0][j].type = between(0, JEWEL_TYPE_N);
+        
+        //terminou de descer, faz outro teste
+        global_state->fall_state = TEST_FALL;
+      } else 
+        //Movimenta joias
+        for (int i=global_state->i_jewel_fall-1; i>-1 ;i--)
+          for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
+            board[i][j].y += 1;
+      break;
+
+    case VERTICAL_FALL:
+      //Se as joias terminaram de descer
+      if ( board[global_state->i_jewel_fall-1][global_state->j_jewel_fall].y == 
+           board[global_state->l_jewel_fall-1][global_state->j_jewel_fall].y ){
+        //Restaura posição do y vertical
+        for (int i=global_state->i_jewel_fall-1; i>-1 ;i--)
+          board[i][global_state->j_jewel_fall].y -= JEWEL_SIZE*(global_state->l_jewel_fall - global_state->i_jewel_fall);
+
+        //Permite renderizar vertical
+        for (int i=global_state->i_jewel_fall; i<global_state->l_jewel_fall ;i++)
+          board[i][global_state->j_jewel_fall].draw = 1;
+
+        //Atualiza tipo de doce na vertical
+        for (int i=global_state->l_jewel_fall-1; i>-1 ;i--)
+          if ( i > ((global_state->l_jewel_fall - global_state->i_jewel_fall)-1) )
+            board[i][global_state->j_jewel_fall].type = board[--(global_state->i_jewel_fall)][global_state->j_jewel_fall].type;
+          else
+            board[i][global_state->j_jewel_fall].type = between(0, JEWEL_TYPE_N);
+
+        //Terminou de descer, faz outro teste
+        global_state->fall_state = TEST_FALL;
+      } else
+        //Movimenta joias
+        for (int i=global_state->i_jewel_fall-1; i>-1 ;i--)
+          board[i][global_state->j_jewel_fall].y += 1;
+
+      break;
+  }
+
+  return;
+}
+
+
 
 void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse){
 
@@ -560,7 +636,6 @@ void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse){
             global_state->y_jewel_clk = board[mouse->i_clk][mouse->j_clk].y;      //Salva as coordenadas da troca
             global_state->x_jewel_rls = board[mouse->i_rls][mouse->j_rls].x;      //Salva as coordenadas da troca
             global_state->y_jewel_rls = board[mouse->i_rls][mouse->j_rls].y;      //Salva as coordenadas da troca
-
           }
       break;
 
@@ -569,12 +644,11 @@ void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse){
       break;
 
     case BOARD_JEWEL_FALL:      //Desce joias do matchpoint
-      mouse->i_clk = -1; mouse->j_clk = -1;
-      mouse->i_rls = -1; mouse->j_rls = -1;
-      global_state->board_state = BOARD_NEW_PLAY;
+      jewel_fall(board, global_state, mouse);
+      mouse->i_clk = -1; mouse->j_clk = -1;   //Zera mouse
+      mouse->i_rls = -1; mouse->j_rls = -1;   //Zera mouse
       break;
   }
-
 }
 
 void board_draw(JEWEL **board, ALLEGRO_BITMAP **candy_sprite){
@@ -583,7 +657,6 @@ void board_draw(JEWEL **board, ALLEGRO_BITMAP **candy_sprite){
     for(int j=0; j<BOARD_N ;j++)
       if ( board[i][j].draw )
         al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
-
 }
 
 
