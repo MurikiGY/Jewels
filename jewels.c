@@ -133,7 +133,7 @@ void audio_deinit(ALLEGRO_AUDIO_STREAM **bg_music){
 void keyboard_init(unsigned char key[]){
 
   must_init(al_install_keyboard(), "keyboard");
-  memset(key, 0, sizeof(unsigned char));
+  memset(key, 0, sizeof(unsigned char) * ALLEGRO_KEY_MAX);
 }
 
 void keyboard_update(ALLEGRO_EVENT* event, unsigned char key[]){
