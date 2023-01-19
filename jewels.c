@@ -327,7 +327,7 @@ typedef enum state_fall {
 typedef struct states {
   STATE_BOARD board_state;          //Maquina de estado do tabuleiro
   STATE_JEWEL jewel_state;          //Maquina de estado da joia
-  STATE_FALL  fall_state;
+  STATE_FALL  fall_state;           //Maquina de estado da queda do tabuleiro
   int x_jewel_clk, y_jewel_clk;     //Coordenadas da joia clicada
   int x_jewel_rls, y_jewel_rls;     //Coordenadas da joia solta
   int i_jewel_fall, j_jewel_fall;   //coordenadas da queda
@@ -586,40 +586,45 @@ int jewel_fall(JEWEL **board, STATES *global_state, MOUSE *mouse){
           for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
             board[i][j].y += 5;
 
-        if ( board[0][global_state->j_jewel_fall].y == 100 )
+        if ( board[0][global_state->j_jewel_fall].y == Y_OFFSET - JEWEL_SIZE/2 )
           for (int j=global_state->j_jewel_fall; j<global_state->k_jewel_fall ;j++)
             board[0][j].draw = 1;
-
       }
       break;
 
     case VERTICAL_FALL:
-      //Se as joias terminaram de descer
-      if ( board[global_state->i_jewel_fall-1][global_state->j_jewel_fall].y == 
-           board[global_state->l_jewel_fall-1][global_state->j_jewel_fall].y ){
-        //Restaura posição do y vertical
-        for (int i=global_state->i_jewel_fall-1; i>-1 ;i--)
-          board[i][global_state->j_jewel_fall].y -= JEWEL_SIZE*(global_state->l_jewel_fall - global_state->i_jewel_fall);
-
-        //Permite renderizar vertical
-        for (int i=global_state->i_jewel_fall; i<global_state->l_jewel_fall ;i++)
-          board[i][global_state->j_jewel_fall].draw = 1;
-
-        //Atualiza tipo de doce na vertical
-        int aux = global_state->l_jewel_fall - global_state->i_jewel_fall;
-        for (int i=global_state->l_jewel_fall-1; i>-1 ;i--)
-          if ( i > aux-1 )
-            board[i][global_state->j_jewel_fall].type = board[--(global_state->i_jewel_fall)][global_state->j_jewel_fall].type;
-          else
-            board[i][global_state->j_jewel_fall].type = between(0, JEWEL_TYPE_N);
-
-        //Terminou de descer, faz outro teste
+      //Se terminou de descer tudo
+      if ( global_state->i_jewel_fall == global_state->l_jewel_fall){
         global_state->fall_state = TEST_FALL;
+        board[0][global_state->j_jewel_fall].draw = 0;    //Apaga doce da linha zero
       } else
-        //Movimenta joias
-        for (int i=global_state->i_jewel_fall-1; i>-1 ;i--)
-          board[i][global_state->j_jewel_fall].y += 5;
+        //Se terminou de descer uma posição
+        if ( board[global_state->i_jewel_fall-1][global_state->j_jewel_fall].y ==
+            board[global_state->i_jewel_fall][global_state->j_jewel_fall].y){
+          //Restaura posição do y vertical
+          for ( int i=global_state->i_jewel_fall-1; i>-1 ;i--)
+            board[i][global_state->j_jewel_fall].y -= JEWEL_SIZE;
 
+          //Permite joia em i renderizar e apaga primeira joia
+          board[global_state->i_jewel_fall][global_state->j_jewel_fall].draw = 1;
+          board[0][global_state->j_jewel_fall].draw = 0;
+
+          //Atualiza tipos
+          for (int i=global_state->i_jewel_fall; i>0 ;i--)
+            board[i][global_state->j_jewel_fall].type = board[i-1][global_state->j_jewel_fall].type;
+          board[0][global_state->j_jewel_fall].type = between(0, JEWEL_TYPE_N);
+
+          //Desce ponteiro do i_jewel_fall
+          (global_state->i_jewel_fall)++;
+        } else {
+          //Movimenta joias
+          for (int i=global_state->i_jewel_fall-1; i>-1 ;i--)
+            board[i][global_state->j_jewel_fall].y += 5;
+
+          //Se peça da linha zero deve renderizar
+          if ( board[0][global_state->j_jewel_fall].y == Y_OFFSET - JEWEL_SIZE/2 )
+              board[0][global_state->j_jewel_fall].draw = 1;
+        }
       break;
   }
 
