@@ -37,3 +37,23 @@
       for (int j=0; j<BOARD_N-2 ;j++) 
 
 # Ta dando falha de segmentação no board_draw
+  - Erro por conta do indice k sendo testado se estava fora do board depois de ser usado
+
+# Peças em L
+  - Há duas situações, L em pé e L de ponta cabeça.
+  Primeiro passo é desenhar as peças de j a k cairem uma vez. Uma vez caida fazer as outras peças da coluna j cairem.
+  Caso L em pé:
+  - Ha duas situações de desenho, uma é das 3 primeiras peças cairem e outra das duas restantes.
+
+
+
+
+
+
+
+
+
+
+
+
+
