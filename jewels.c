@@ -909,6 +909,13 @@ int jewel_fall(JEWEL **board, STATES *global_state){
   return 1;
 }
 
+int modulo (int x, int y){
+  if ( x > y )
+    return x - y;
+  else
+    return y - x;
+}
+
 void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse){
   int *i_clk = &(mouse->i_clk), *j_clk = &(mouse->j_clk);   //Coordenadas board click
   int *i_rls = &(mouse->i_rls), *j_rls = &(mouse->j_rls);   //Coordenadas board release
@@ -917,25 +924,41 @@ void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse){
 
   switch ( global_state->board_state ){
     case BOARD_NEW_PLAY:    //Carrega nova jogada
-      //Calcula coordenadas do doce clicado na matriz
-      *i_clk = (mouse->y_clk - Y_OFFSET)/JEWEL_SIZE;
-      *j_clk = (mouse->x_clk - X_OFFSET)/JEWEL_SIZE;
-      *i_rls = (mouse->y_rls - Y_OFFSET)/JEWEL_SIZE;
-      *j_rls = (mouse->x_rls - X_OFFSET)/JEWEL_SIZE;
+      //Calcula coordenadas do doce clicado e solto na matriz
+      *i_clk = (mouse->y_clk - Y_OFFSET + JEWEL_SIZE)/JEWEL_SIZE;    //Linha da joia clicada
+      *j_clk = (mouse->x_clk - X_OFFSET)/JEWEL_SIZE;                 //Coluna da joia clicada
+      *i_rls = (mouse->y_rls - Y_OFFSET + JEWEL_SIZE)/JEWEL_SIZE;    //Linha da joia solta
+      *j_rls = (mouse->x_rls - X_OFFSET)/JEWEL_SIZE;                 //Coluna da joia solta
 
       //Se o click foi no tabuleiro
-      if ((*i_clk > -1 && *i_clk < BOARD_N) && (*j_clk > -1 && *j_clk < BOARD_N))
+      if ( (*i_clk > 0 && *i_clk < BOARD_N+1) && (*j_clk > -1 && *j_clk < BOARD_N) )
         //Se o release foi no tabuleiro
-        if ((*i_rls > -1 && *i_rls < BOARD_N) && (*j_rls > -1 && *j_rls < BOARD_N))
-          //Se o release foi ao lado do click
-          if ((*i_rls==*i_clk   && *j_rls==*j_clk-1) || (*i_rls==*i_clk   && *j_rls==*j_clk+1) ||
-              (*i_rls==*i_clk-1 && *j_rls==*j_clk)   || (*i_rls==*i_clk+1 && *j_rls==*j_clk)){
-            (mouse->i_clk)++; (mouse->i_rls)++;               //Correção da linha 0 invisível
-            global_state->board_state = BOARD_SWITCH_JEWEL;   //Manda animar troca de peças
-            *x_jewel_clk = board[*i_clk][*j_clk].x;           //Salva as coordenadas da troca
-            *y_jewel_clk = board[*i_clk][*j_clk].y;           //Salva as coordenadas da troca
-            *x_jewel_rls = board[*i_rls][*j_rls].x;           //Salva as coordenadas da troca
-            *y_jewel_rls = board[*i_rls][*j_rls].y;           //Salva as coordenadas da troca
+        if ( (*i_rls > 0 && *i_rls < BOARD_N+1) && (*j_rls > -1 && *j_rls < BOARD_N) )
+          //testa se houve movimento
+          if ( mouse->x_clk != mouse->x_rls || mouse->y_clk != mouse->y_rls ) {
+            int h_delta     = modulo(mouse->x_clk, mouse->x_rls);
+            int v_delta     = modulo(mouse->y_clk, mouse->y_rls);
+            int horizontal  = mouse->x_rls - mouse->x_clk;
+            int vertical    = mouse->y_rls - mouse->y_clk;
+            //Se variação horizontal maior que vertical
+            if ( h_delta > v_delta ){                        
+              mouse->i_rls = mouse->i_clk;
+              if ( horizontal > 0 )
+                mouse->j_rls = mouse->j_clk + 1;          //Movimenta direita
+              else
+                mouse->j_rls = mouse->j_clk - 1;          //Movimenta esquerda
+            } else {
+              mouse->j_rls = mouse->j_clk;
+              if ( vertical > 0 )
+                mouse->i_rls = mouse->i_clk + 1;          //Movimenta baixo
+              else
+                mouse->i_rls = mouse->i_clk - 1;          //Movimenta cima
+            }
+            *x_jewel_clk = board[*i_clk][*j_clk].x;       //Salva as coordenadas da troca
+            *y_jewel_clk = board[*i_clk][*j_clk].y;       //Salva as coordenadas da troca
+            *x_jewel_rls = board[*i_rls][*j_rls].x;       //Salva as coordenadas da troca
+            *y_jewel_rls = board[*i_rls][*j_rls].y;       //Salva as coordenadas da troca
+            global_state->board_state = BOARD_SWITCH_JEWEL;
           }
       break;
 

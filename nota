@@ -45,6 +45,11 @@
   Caso L em pé:
   - Ha duas situações de desenho, uma é das 3 primeiras peças cairem e outra das duas restantes.
 
+# Logica da troca de peças
+  - Se o clique foi no tabuleiro
+      calcula movimento
+    Se movimento fora do tabuleiro
+      Troca peças
 
 
 
