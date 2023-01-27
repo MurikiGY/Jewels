@@ -11,7 +11,7 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 
 run: all
-	valgrind ./$(TARGET)
+	./$(TARGET)
 
 clean:
 	-rm -f *.o *~f

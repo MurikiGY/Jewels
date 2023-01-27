@@ -323,8 +323,7 @@ typedef enum state_fall {
   L_FALL_EM_PE,
   L_FALL_PONTA_CABECA,
   HORIZONTAL_FALL,
-  VERTICAL_FALL,
-  RENDER_FALL
+  VERTICAL_FALL
 } STATE_FALL;
 
 typedef struct states {
@@ -364,7 +363,7 @@ typedef struct jewel {
 #define JEWEL_SIZE    70             //Tamanho ocupado pelo doce
 #define BOARD_N       8              //Tamanho da matriz
 #define JEWEL_TYPE_N  5              //Tipos diferentes de doces
-#define FALL_SPEED 5
+#define FALL_SPEED 7
 
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
@@ -474,12 +473,12 @@ void switch_movement(JEWEL **board, int i_clk, int j_clk, int i_rls, int j_rls, 
   }
 }
 
-//Renderiza troca de joias e testa se deve desfazer
+//Troca joias de posição, renderiza e testa se deve desfazer
 void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse){
   int *i_clk = &(mouse->i_clk), *j_clk = &(mouse->j_clk);   //Coordenadas board click
   int *i_rls = &(mouse->i_rls), *j_rls = &(mouse->j_rls);   //Coordenadas board release
-  int *x_jewel_clk = &(global_state->x_jewel_clk), *y_jewel_clk = &(global_state->y_jewel_clk);   //Coordenada de trocas 
-  int *x_jewel_rls = &(global_state->x_jewel_rls), *y_jewel_rls = &(global_state->y_jewel_rls);   //Coordenada de trocas
+  int *x_jewel_clk = &(global_state->x_jewel_clk), *y_jewel_clk = &(global_state->y_jewel_clk);
+  int *x_jewel_rls = &(global_state->x_jewel_rls), *y_jewel_rls = &(global_state->y_jewel_rls);
 
   switch ( global_state->jewel_state ){
     case JEWEL_GO:
@@ -530,7 +529,7 @@ int horizontal_test(JEWEL **board, STATES *global_state){
         *k_fall = k; *l_fall = -1;
         for (; j<k ;j++)    //Esconde doces sequenciados
           board[i][j].draw = 0;
-        return i; } }
+        return 1; } }
 
   return 0;
 }
@@ -930,6 +929,14 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
   return 1;
 }
 
+int modulo (int x, int y){
+  if ( x > y )
+    return x - y;
+  else
+    return y - x;
+}
+
+
 void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
   int *i_clk = &(mouse->i_clk), *j_clk = &(mouse->j_clk);   //Coordenadas board click
   int *i_rls = &(mouse->i_rls), *j_rls = &(mouse->j_rls);   //Coordenadas board release
@@ -944,8 +951,8 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
         (mouse->y_rls > Y_OFFSET && mouse->y_rls < DISP_H-20) )
      //testa se houve movimento
      if ( mouse->x_clk != mouse->x_rls || mouse->y_clk != mouse->y_rls ) {
-       int h_delta     = abs(mouse->x_clk-mouse->x_rls);
-       int v_delta     = abs(mouse->y_clk-mouse->y_rls);
+       int h_delta     = modulo(mouse->x_clk, mouse->x_rls);
+       int v_delta     = modulo(mouse->y_clk, mouse->y_rls);
        int horizontal  = mouse->x_rls - mouse->x_clk;
        int vertical    = mouse->y_rls - mouse->y_clk;
 
@@ -981,53 +988,6 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
 }
 
 
-
-
-
-int jewel_fall_new(JEWEL **board, STATES *global_state, SCORE *game_score){
-  int *i_fall = &(global_state->i_jewel_fall);
-  int finish_flag = 0;
-
-  switch ( global_state->fall_state ){
-
-    case TEST_FALL:
-      *i_fall = horizontal_test(board, global_state);
-        if ( *i_fall )
-          global_state->fall_state = RENDER_FALL;
-        else
-          global_state->board_state = BOARD_NEW_PLAY;
-    break;
-
-    case RENDER_FALL:
-      for (int j=0; j<BOARD_N ;j++)
-        if ( board[*i_fall][j].draw == 0 ){                        //Se tiver que renderizar joia caindo
-          if ( board[*i_fall-1][j].y == board[*i_fall][j].y ){     //Se joia tiver terminado de cair
-            //restaura y
-            board[*i_fall-1][j].y -= JEWEL_SIZE;
-
-            //Permite renderizar
-            board[*i_fall][j].draw = 1;
-
-            //Troca tipos
-            board[*i_fall][j].type = board[*i_fall-1][j].type;
-
-            //Seta flag
-            finish_flag = 1;
-
-            //Faz outro teste
-            global_state->fall_state = TEST_FALL;
-          
-          } else {
-            board[*i_fall-1][j].y += 1;
-          }
-        }
-    break;
-  }
-  return 1;
-}
-
-
-
 void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse, SCORE *game_score){
   int *i_clk = &(mouse->i_clk), *j_clk = &(mouse->j_clk);   //Coordenadas board click
   int *i_rls = &(mouse->i_rls), *j_rls = &(mouse->j_rls);   //Coordenadas board release
@@ -1042,8 +1002,7 @@ void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse, SCORE *game
       break;
 
     case BOARD_JEWEL_FALL:                                    //Desce joias do matchpoint
-      jewel_fall_new(board, global_state, game_score);
-      //jewel_fall(board, global_state, game_score);
+      jewel_fall(board, global_state, game_score);
       *i_clk = -1; *j_clk = -1;                               //Zera mouse
       *i_rls = -1; *j_rls = -1;                               //Zera mouse
       break;
