@@ -51,6 +51,16 @@
     Se movimento fora do tabuleiro
       Troca peças
 
+# Renderiza
+  - Percorre a linha que ele ta trabalhando descendo uma posição e retorna
+    renderiza
+    Percorre a linha que ele ta trabalhando descendo uma posição e retorna
+    renderiza
+    percorre, mas ve que ja ta na posição que queria e restaura, atualiza
+    renderiza
+    
+    Quando o ponteiro da linha deve descer?
+      Quando terminar de renderizar a linha inteira ou quando não ha linha pra renderizar
 
 
 
