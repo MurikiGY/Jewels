@@ -359,8 +359,8 @@ typedef struct jewel {
 #define Y_OFFSET      140            //Espaçamento do score
 #define JEWEL_SIZE    70             //Tamanho ocupado pelo doce
 #define BOARD_N       8              //Tamanho da matriz
-#define JEWEL_TYPE_N  5              //Tipos diferentes de doces
-#define FALL_SPEED 2
+#define JEWEL_TYPE_N  9              //Tipos diferentes de doces
+#define FALL_SPEED 5
 
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
@@ -370,9 +370,13 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   candy_sprite[2] = al_load_bitmap("resources/candy/candy3.png");   //Ponteiro de sprite 2
   candy_sprite[3] = al_load_bitmap("resources/candy/candy4.png");   //Ponteiro de sprite 3
   candy_sprite[4] = al_load_bitmap("resources/candy/candy5.png");   //Ponteiro de sprite 4
+  candy_sprite[5] = al_load_bitmap("resources/candy/special_candy1.png");   //Ponteiro de sprite 4
+  candy_sprite[6] = al_load_bitmap("resources/candy/special_candy2.png");   //Ponteiro de sprite 4
+  candy_sprite[7] = al_load_bitmap("resources/candy/special_candy3.png");   //Ponteiro de sprite 4
+  candy_sprite[8] = al_load_bitmap("resources/candy/special_candy4.png");   //Ponteiro de sprite 4
+  candy_sprite[9] = al_load_bitmap("resources/candy/special_candy5.png");   //Ponteiro de sprite 4
 
   JEWEL **board;  //Altura BOARD_N+1 e comprimento BOARD_N
-
   board = malloc( sizeof(JEWEL *) * (BOARD_N+1) );            //Vetor de ponteiros
   must_init(board, "Board Pointers");
   board[0] = malloc( sizeof(JEWEL) * BOARD_N * (BOARD_N+1) ); //Matriz com todos os doces
@@ -522,9 +526,9 @@ int horizontal_test(JEWEL **board, STATES *global_state){
         while ( k < BOARD_N && board[i][k].type == tipo )
           k++;
         *i_fall = i;
-        for (; j<k ;j++)    //Esconde doces sequenciados
-          board[i][j].draw = 0;
-        return 1; } }
+        for (int aux=j; aux<k ;aux++)    //Esconde doces sequenciados
+          board[i][aux].draw = 0;
+        return k-j; } }
 
   return 0;
 }
@@ -541,9 +545,9 @@ int vertical_test(JEWEL **board, STATES *global_state){
         while ( k < BOARD_N+1 && board[k][j].type == tipo)
           k++;
         *i_fall = i;
-        for (; i<k ;i++)    //Esconde doces sequenciados
-          board[i][j].draw = 0;
-        return 1; } }
+        for (int aux=i; aux<k ;aux++)    //Esconde doces sequenciados
+          board[aux][j].draw = 0;
+        return k-i; } }
  
   return 0;
 }
@@ -662,7 +666,7 @@ int T_test(JEWEL **board, STATES *global_state){
 int star_test(JEWEL **board, STATES *global_state){
   int *i_fall = &(global_state->i_jewel_fall);
 
-  for (int i=0; i<BOARD_N-1 ;i++)
+  for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=1; j<BOARD_N-1 ;j++){
       int tipo = board[i][j].type;
       if ( board[i+1][j-1].type == tipo && board[i+1][j].type == tipo &&
@@ -747,7 +751,7 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
   switch ( global_state->fall_state ){
 
     case TEST_FALL:
-      if ( L_test(board, global_state) || T_test(board, global_state) || star_test(board, global_state) ) {
+      if ( T_test(board, global_state) || L_test(board, global_state) || star_test(board, global_state) ) {
         game_score->score += 500;
         snprintf(game_score->str_score, 20, "%d", game_score->score);
         global_state->fall_state = RENDER_FALL;
@@ -771,8 +775,7 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
             return 1;
           }  else
             global_state->board_state = BOARD_NEW_PLAY;   //Nao ha mais matchpoints
-        }
-      }
+        } }
     return 0;
     
     //Renderiza joias caindo na linha *i_fall
@@ -879,7 +882,7 @@ int main(){
   stars_init(stars);
   SCORE *game_score;                                      //Variavel de score
   game_score = score_init();
-  JEWEL **board; ALLEGRO_BITMAP *candy_sprite[5];         //Variavel do tabuleiro e vetor de sprites
+  JEWEL **board; ALLEGRO_BITMAP *candy_sprite[10];         //Variavel do tabuleiro e vetor de sprites
   board = board_init(candy_sprite);
   STATES global_state;                                    //Variavel de maquina de estados
   state_init(&global_state);
