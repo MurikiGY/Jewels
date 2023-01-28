@@ -272,9 +272,9 @@ void stars_draw(STAR stars[]){
 
 typedef struct SCORE {
   int   score;
-  char  str_score[10];
+  char  str_score[20];
   int   global_score;
-  char  str_global_score[10];
+  char  str_global_score[20];
   int   x_score, y_score;
   int   x_global, y_global;
 } SCORE;
@@ -740,21 +740,39 @@ void imprime_board(JEWEL **board){
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario
-int jewel_fall_new(JEWEL **board, STATES *global_state, SCORE *game_score){
+int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
   int *i_fall = &(global_state->i_jewel_fall);
   int *fall_flag = &(global_state->fall_flag);
 
   switch ( global_state->fall_state ){
 
     case TEST_FALL:
-      if ( (L_test(board, global_state)          ) || (T_test(board, global_state)          ) ||
-           (star_test(board, global_state)      ) || (horizontal_test(board, global_state) ) ||
-           (vertical_test(board, global_state)   ) ){
+      if ( L_test(board, global_state) || T_test(board, global_state) || star_test(board, global_state) ) {
+        game_score->score += 500;
+        snprintf(game_score->str_score, 20, "%d", game_score->score);
         global_state->fall_state = RENDER_FALL;
-        *fall_flag = 1;                                  //Não houve joia para renderizar?
+        *fall_flag = 1;
         return 1;
-      } else
-        global_state->board_state = BOARD_NEW_PLAY;   //Nao ha mais matchpoints
+      } else {
+        int jewel_number = horizontal_test(board, global_state);
+        if ( jewel_number ){
+          game_score->score += 100 * jewel_number;
+          snprintf(game_score->str_score, 20, "%d", game_score->score);
+          global_state->fall_state = RENDER_FALL;
+          *fall_flag = 1;
+          return 1;
+        } else {
+          jewel_number = vertical_test(board, global_state);
+          if ( jewel_number ){
+            game_score->score += 100 * jewel_number;
+            snprintf(game_score->str_score, 20, "%d", game_score->score);
+            global_state->fall_state = RENDER_FALL;
+            *fall_flag = 1;
+            return 1;
+          }  else
+            global_state->board_state = BOARD_NEW_PLAY;   //Nao ha mais matchpoints
+        }
+      }
     return 0;
     
     //Renderiza joias caindo na linha *i_fall
@@ -812,7 +830,7 @@ void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse, SCORE *game
       break;
 
     case BOARD_JEWEL_FALL:                                    //Desce joias do matchpoint
-      jewel_fall_new(board, global_state, game_score);
+      jewel_fall(board, global_state, game_score);
       *i_clk = -1; *j_clk = -1;                               //Zera mouse
       *i_rls = -1; *j_rls = -1;                               //Zera mouse
       break;
@@ -866,9 +884,9 @@ int main(){
   STATES global_state;                                    //Variavel de maquina de estados
   state_init(&global_state);
 
-  int ok = jewel_fall_new(board, &global_state, game_score);
+  int ok = jewel_fall(board, &global_state, game_score);
   while ( ok )
-    ok = jewel_fall_new(board, &global_state, game_score);
+    ok = jewel_fall(board, &global_state, game_score);
 
   //Registradores de evento
   al_register_event_source(queue, al_get_keyboard_event_source());
