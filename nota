@@ -62,7 +62,19 @@
     Quando o ponteiro da linha deve descer?
       Quando terminar de renderizar a linha inteira ou quando não ha linha pra renderizar
 
+# Joias especiais
+  - Sequencias de 4 não fazem nada.
+  - Sequencias de 5 gera uma joia que explode em volta
+  - Joia sequencial de 5 faz uma que explode em crux
 
+# Algoritmo de explosões
+  De 0 a 4 são tipos normais,
+  De 5 a 9 são tipos especiais,
+  - Pega o tipo da joia em questão, se o tipo ao lado for igual ao mesmo tipo, ou ao tipo mais 5, estoura
+
+# Imprime board
+[0][1] [0][2] [0][3] [0][4] [0][5] [0][6] [0][7]
+ 1  0   2  0   5  0   4  1   3  0   1  0   2  0
 
 
 
