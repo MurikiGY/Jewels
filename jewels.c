@@ -360,7 +360,7 @@ typedef struct jewel {
 #define JEWEL_SIZE    70             //Tamanho ocupado pelo doce
 #define BOARD_N       8              //Tamanho da matriz
 #define JEWEL_TYPE_N  5              //Tipos diferentes de doces
-#define FALL_SPEED 1
+#define FALL_SPEED 5
 
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
@@ -607,82 +607,29 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
 
 
 //Seta draw para 0 a posicao de uma peça especial
-void hide_special_explosion(JEWEL **board, int i, int j, int back_i, int back_j){
-  // i pode ir de 1 a 8
-  // j pode ir de 0 a 7
-  // Recurcao: se não for board[i][j] e não for o especial que chamou
+void hide_special_explosion(JEWEL **board, int i, int j){
+  // i pode ir de 1 a 8 e j pode ir de 0 a 7
+  
+  // a começa em j-1 e pode ir até i+1 ou i+2
+  // b pode começar em j ou j-1 e pode ir até j+1 ou j+2
+  int a_end = i+2,  b_start = j-1,   b_end = j+2;
 
-  if ( j == 0 ){   //Nao acessa j-1
-    if ( i == BOARD_N ){
-      //board[i-1][j].draw = 0; board[i-1][j+1].draw = 0;
-      //board[i  ][j].draw = 0; board[i  ][j+1].draw = 0;
-      for (int a=i-1; a<i+1 ;a++)
-        for (int b=j; b<j+2 ;b++){
-          board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 && 
-               a != i && a != back_i && b != j && b != back_j)
-            hide_special_explosion(board, a, b, i, j);
-        }
+  //Remove tipo especial para não backtraking infinito
+  board[i][j].type -= 5;
 
-    } else {
-      //board[i-1][j].draw = 0; board[i-1][j+1].draw = 0;
-      //board[i  ][j].draw = 0; board[i  ][j+1].draw = 0;
-      //board[i+1][j].draw = 0; board[i+1][j+1].draw = 0;
-      for (int a=i-1; a<i+2 ;a++)
-        for (int b=j; b<j+2 ;b++){
-          board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 && 
-               a != i && a != back_i && b != j && b != back_j)
-            hide_special_explosion(board, a, b, i, j);
-        }
+  if ( j == 0 )               
+    b_start = j;
+  else if ( j == BOARD_N-1 )  
+    b_end = j+1;
+  if ( i == BOARD_N )         
+    a_end = i+1;
+
+  for (int a=i-1; a<a_end ;a++)
+    for (int b=b_start; b<b_end  ;b++){
+      board[a][b].draw = 0;
+      if ( board[a][b].type > 4 && board[a][b].type < 10 )
+        hide_special_explosion(board, a, b);
     }
-  } else if ( j == BOARD_N-1 ){  //Nao acessa j+1
-    if ( i == BOARD_N ){
-      //board[i-1][j-1].draw = 0; board[i-1][j].draw = 0;
-      //board[i  ][j-1].draw = 0; board[i  ][j].draw = 0;
-      for (int a=i-1; a<i+1 ;a++)
-        for (int b=j-1; b<j+1 ;b++){
-          board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 && 
-               a != i && a != back_i && b != j && b != back_j)
-            hide_special_explosion(board, a, b, i, j);
-        }
-    } else {
-      //board[i-1][j-1].draw = 0; board[i-1][j].draw = 0;
-      //board[i  ][j-1].draw = 0; board[i  ][j].draw = 0;
-      //board[i+1][j-1].draw = 0; board[i+1][j].draw = 0;
-      for (int a=i-1; a<i+2 ;a++)
-        for (int b=j-1; b<j+1 ;b++){
-          board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 && 
-               a != i && a != back_i && b != j && b != back_j)
-            hide_special_explosion(board, a, b, i, j);
-        }
-    }
-  } else if ( i == BOARD_N ){
-    //board[i-1][j-1].draw = 0; board[i-1][j].draw = 0; board[i-1][j+1].draw = 0;
-    //board[i  ][j-1].draw = 0; board[i  ][j].draw = 0; board[i  ][j+1].draw = 0;
-      for (int a=i-1; a<i+1 ;a++)
-        for (int b=j-1; b<j+2 ;b++){
-          board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 &&
-               a != i && a != back_i && b != j && b != back_j)
-            hide_special_explosion(board, a, b, i, j);
-        }
-  } else {
-    //board[i-1][j-1].draw = 0; board[i-1][j].draw = 0; board[i-1][j+1].draw = 0;
-    //board[i  ][j-1].draw = 0; board[i  ][j].draw = 0; board[i  ][j+1].draw = 0;
-    //board[i+1][j-1].draw = 0; board[i+1][j].draw = 0; board[i+1][j+1].draw = 0;
-      for (int a=i-1; a<i+2 ;a++)
-        for (int b=j-1; b<j+2 ;b++){
-          board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 )
-            if ((a != i && b != j) || (a != back_i && b != back_j)){
-              printf("AAAAAAAAAAAA\n");
-              hide_special_explosion(board, a, b, i, j);
-          }
-        }
-  }
 }
 
 //Seta draw para 0 de acordo com switch
@@ -692,73 +639,73 @@ void hide_pieces(JEWEL **board, int tipo, int i, int j, int match_type){
     case 1:   //Caso em L
       board[i-1][j].draw = 0; board[i][j+1].draw = 0;
       board[i-2][j].draw = 0; board[i][j+2].draw = 0;
-      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j, -1, -1);      
-      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j, -1, -1);
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1, -1, -1);
-      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2, -1, -1);
+      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);      
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
     break;
 
     case 2:   //Caso de L invertido
       board[i-1][j].draw = 0; board[i][j-1].draw = 0;
       board[i-2][j].draw = 0; board[i][j-2].draw = 0;
-      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j, -1, -1);      
-      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j, -1, -1);
-      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1, -1, -1);
-      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2, -1, -1);
+      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);      
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
+      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
     break;
 
     case 3:   //Caso de L de ponta-cabeca 
       board[i+1][j].draw = 0; board[i][j+1].draw = 0;
       board[i+2][j].draw = 0; board[i][j+2].draw = 0;
-      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j, -1, -1);
-      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j, -1, -1);
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1, -1, -1);
-      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2, -1, -1);
+      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
     break;
 
     case 4:   //Caso de L invertido de ponta-cabeca
       board[i+1][j].draw = 0; board[i][j-1].draw = 0;
       board[i+2][j].draw = 0; board[i][j-2].draw = 0;
-      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j, -1, -1);      
-      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j, -1, -1);
-      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1, -1, -1);
-      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2, -1, -1);
+      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);      
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
+      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
     break;
 
     case 5:   //Caso de T em pé
       board[i][j-1].draw = 0; board[i+1][j].draw = 0;
       board[i][j+1].draw = 0; board[i+2][j].draw = 0;
-      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1, -1, -1);      
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1, -1, -1);
-      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j, -1, -1);
-      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j, -1, -1);
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
     break;
 
     case 6:   //Caso de T de ponta-cabeca
       board[i][j-1].draw = 0; board[i-1][j].draw = 0;
       board[i][j+1].draw = 0; board[i-2][j].draw = 0;
-      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1, -1, -1);      
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1, -1, -1);
-      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j, -1, -1);
-      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j, -1, -1);
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
     break;
 
     case 7:   //Caso de T deitado para esquerda
       board[i][j+1].draw = 0; board[i-1][j].draw = 0;
       board[i][j+2].draw = 0; board[i+1][j].draw = 0;
-      if      ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1, -1, -1);      
-      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2, -1, -1);
-      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j, -1, -1);
-      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j, -1, -1);
+      if      ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);      
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
     break;
 
     case 8:   //Caso de T deitado para direita
       board[i][j-1].draw = 0; board[i-1][j].draw = 0;
       board[i][j-2].draw = 0; board[i+1][j].draw = 0;
-      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1, -1, -1);      
-      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2, -1, -1);
-      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j, -1, -1);
-      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j, -1, -1);
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
     break;
   }
 
@@ -776,8 +723,12 @@ int horizontal_test(JEWEL **board, STATES *global_state){
         int k = j+3;
         while ( k < BOARD_N && matchpoint_verify(board, tipo, i, k, 1) ) k++;         //Pega joias sequenciadas
         for (int aux=j; aux<k ;aux++)                                                 //Esconde doces sequenciados
-          if ( board[i][aux].type > 4 )   hide_special_explosion(board, i, aux, -1, -1);
+          if ( board[i][aux].type > 4 )   hide_special_explosion(board, i, aux);
           else                            board[i][aux].draw = 0;
+        if ( k-j == 5 ){
+          board[i][j+2].type += 5;
+          board[i][j+2].draw = 1;
+        }
         *i_fall = 1;
         return k-j; } }
 
@@ -795,8 +746,12 @@ int vertical_test(JEWEL **board, STATES *global_state){
         int k = i+3;
         while ( k < BOARD_N+1 && matchpoint_verify(board, tipo, k, j, 1) ) k++;       //Pega joias sequenciadas
         for (int aux=i; aux<k ;aux++)                                                 //Esconde doces sequenciados
-          if ( board[aux][j].type > 4 )   hide_special_explosion(board, aux, j, -1, -1);
-          else                            board[aux][j].draw = 0; 
+          if ( board[aux][j].type > 4 )   hide_special_explosion(board, aux, j);
+          else                            board[aux][j].draw = 0;
+        if ( k-i == 5 ){
+          board[i+2][j].type += 5;
+          board[i+2][j].draw = 1;
+        }
         *i_fall = 1;
         return k-i; } }
  
