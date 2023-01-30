@@ -676,10 +676,10 @@ void hide_special_explosion(JEWEL **board, int i, int j, int back_i, int back_j)
       for (int a=i-1; a<i+2 ;a++)
         for (int b=j-1; b<j+2 ;b++){
           board[a][b].draw = 0;
-          if ( board[a][b].type > 4 && board[a][b].type < 10 && 
-              ((a != i && b != j) || (a != back_i && b != back_j))){
-            printf("AAAAAAAAAAAA\n");
-            hide_special_explosion(board, a, b, i, j);
+          if ( board[a][b].type > 4 && board[a][b].type < 10 )
+            if ((a != i && b != j) || (a != back_i && b != back_j)){
+              printf("AAAAAAAAAAAA\n");
+              hide_special_explosion(board, a, b, i, j);
           }
         }
   }
