@@ -715,23 +715,25 @@ int horizontal_test(JEWEL **board, STATES *global_state){
 
   for (int i=1; i<BOARD_N+1 ;i++)
     for (int j=0; j<BOARD_N-2 ;j++){
-      int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 2) ){                                 //Se marcou ponto
-        int k = j+3;
-        while ( k < BOARD_N && matchpoint_verify(board, tipo, i, k, 1) ) k++;         //Pega joias sequenciadas
-        for (int aux=j; aux<k ;aux++)                                                 //Esconde doces sequenciados
-          //Se for especial nao gerado recentemente
-          if ( board[i][aux].type > 4 && board[i][aux].special_gen_flag == 0 )
-            hide_special_explosion(board, i, aux);
-          else                            
-            board[i][aux].draw = 0;
+      if ( board[i][j].draw ){
+        int tipo = board[i][j].type;
+        if ( matchpoint_verify(board, tipo, i, j, 2) ){                                 //Se marcou ponto
+          int k = j+3;
+          while ( k < BOARD_N && matchpoint_verify(board, tipo, i, k, 1) ) k++;         //Pega joias sequenciadas
+          for (int aux=j; aux<k ;aux++)                                                 //Esconde doces sequenciados
+            //Se deve explodir especial
+            if ( board[i][aux].type > 4 && board[i][aux].special_gen_flag == 0 )
+              hide_special_explosion(board, i, aux);
+            else                            
+              board[i][aux].draw = 0;
 
-        //Gera joia especial
-        if ( k-j == 5 ){
-          board[i][j+2].type += 5;
-          board[i][j+2].draw = 1;
-          board[i][j+2].special_gen_flag = 1; }
-        quant += k-j; } }
+          //Gera joia especial
+          if ( k-j == 5 ){
+            board[i][j+2].type += 5;
+            board[i][j+2].draw = 1;
+            board[i][j+2].special_gen_flag = 1; }
+          quant += k-j; } }
+      }
 
   return quant;
 }
@@ -987,18 +989,17 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
   switch ( global_state->fall_state ){
     case TEST_FALL:
       //Bateria de testes
-      jewel_quant += T_test(board, global_state);
-      jewel_quant += L_test(board, global_state);
-      jewel_quant += star_test(board, global_state);
+      //jewel_quant += T_test(board, global_state);
+      //jewel_quant += L_test(board, global_state);
+      //jewel_quant += star_test(board, global_state);
       jewel_quant += horizontal_test(board, global_state);
-      jewel_quant += vertical_test(board, global_state);
+      //jewel_quant += vertical_test(board, global_state);
 
       //Se marcou pontuacao, muda pra fall_board
       if ( jewel_quant ){
         global_state->fall_state = RENDER_FALL;
-      //  game_score->score += 500;
-      //  snprintf(game_score->str_score, 20, "%d", game_score->score);
-        *fall_flag = 1; *i_fall = 1;
+        *fall_flag = 1;
+        *i_fall = 1;
         return 1;
       } else
         global_state->board_state = BOARD_NEW_PLAY;
