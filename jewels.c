@@ -731,9 +731,13 @@ int horizontal_test(JEWEL **board, STATES *global_state){
           if ( k-j == 5 ){
             board[i][j+2].type += 5;
             board[i][j+2].draw = 1;
-            board[i][j+2].special_gen_flag = 1; }
-          quant += k-j; } }
+            board[i][j+2].special_gen_flag = 1;
+          }
+          quant += k-j;
+          j = k;
+        } 
       }
+    }
 
   return quant;
 }
@@ -745,23 +749,28 @@ int vertical_test(JEWEL **board, STATES *global_state){
 
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=0; j<BOARD_N ;j++){
-      int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 3) ){
-        int k = i+3;
-        while ( k < BOARD_N+1 && matchpoint_verify(board, tipo, k, j, 1) ) k++;       //Pega joias sequenciadas
-        for (int aux=i; aux<k ;aux++)                                                 //Esconde doces sequenciados
-          //Se for especial nao gerado recentemente
-          if ( board[aux][j].type > 4 && board[aux][j].special_gen_flag == 0 )
-            hide_special_explosion(board, aux, j);      //Se especial, explode
-          else
-            board[aux][j].draw = 0;
+      if ( board[i][j].draw ){
+        int tipo = board[i][j].type;
+        if ( matchpoint_verify(board, tipo, i, j, 3) ){
+          int k = i+3;
+          while ( k < BOARD_N+1 && matchpoint_verify(board, tipo, k, j, 1) ) k++;       //Pega joias sequenciadas
+          for (int aux=i; aux<k ;aux++)                                                 //Esconde doces sequenciados
+            //Se for especial nao gerado recentemente
+            if ( board[aux][j].type > 4 && board[aux][j].special_gen_flag == 0 )
+              hide_special_explosion(board, aux, j);      //Se especial, explode
+            else
+              board[aux][j].draw = 0;
 
-        //Gera joia especial
-        if ( k-i == 5 ){
-          board[i+2][j].type += 5;
-          board[i+2][j].draw = 1;
-          board[i+2][j].special_gen_flag = 1; }
-        quant += k-i; } }
+          //Gera joia especial
+          if ( k-i == 5 ){
+            board[i+2][j].type += 5;
+            board[i+2][j].draw = 1;
+            board[i+2][j].special_gen_flag = 1;
+          }
+          quant += k-i;
+        }
+      }
+    }
 
   return quant;
 }
