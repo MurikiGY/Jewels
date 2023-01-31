@@ -272,9 +272,9 @@ void stars_draw(STAR stars[]){
 
 typedef struct SCORE {
   int   score;
-  char  str_score[10];
+  char  str_score[20];
   int   global_score;
-  char  str_global_score[10];
+  char  str_global_score[20];
   int   x_score, y_score;
   int   x_global, y_global;
 } SCORE;
@@ -320,10 +320,7 @@ typedef enum state_jewel {
 
 typedef enum state_fall {
   TEST_FALL = 0,
-  L_FALL_EM_PE,
-  L_FALL_PONTA_CABECA,
-  HORIZONTAL_FALL,
-  VERTICAL_FALL
+  RENDER_FALL
 } STATE_FALL;
 
 typedef struct states {
@@ -332,8 +329,8 @@ typedef struct states {
   STATE_FALL  fall_state;           //Maquina de estado da queda do tabuleiro
   int x_jewel_clk, y_jewel_clk;     //Coordenadas da joia clicada
   int x_jewel_rls, y_jewel_rls;     //Coordenadas da joia solta
-  int i_jewel_fall, j_jewel_fall;   //coordenadas da queda
-  int k_jewel_fall, l_jewel_fall;
+  int i_jewel_fall;                 //coordenadas da queda
+  int fall_flag;
 } STATES;
 
 void state_init(STATES *global_states) {
@@ -343,8 +340,8 @@ void state_init(STATES *global_states) {
   global_states->fall_state   = TEST_FALL;
   global_states->x_jewel_clk  = -1; global_states->y_jewel_clk  = -1;     //Troca de joias   
   global_states->x_jewel_rls  = -1; global_states->y_jewel_rls  = -1;     //Troca de joias
-  global_states->i_jewel_fall = -1; global_states->j_jewel_fall = -1;   //Queda das joias
-  global_states->k_jewel_fall = -1; global_states->l_jewel_fall = -1;   //Queda das joias
+  global_states->i_jewel_fall = -1;                                       //Queda das joias
+  global_states->fall_flag    = -1;
 }
 
 // --- BOARD ---
@@ -363,7 +360,7 @@ typedef struct jewel {
 #define JEWEL_SIZE    70             //Tamanho ocupado pelo doce
 #define BOARD_N       8              //Tamanho da matriz
 #define JEWEL_TYPE_N  5              //Tipos diferentes de doces
-#define FALL_SPEED 7
+#define FALL_SPEED 5
 
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
@@ -373,9 +370,13 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   candy_sprite[2] = al_load_bitmap("resources/candy/candy3.png");   //Ponteiro de sprite 2
   candy_sprite[3] = al_load_bitmap("resources/candy/candy4.png");   //Ponteiro de sprite 3
   candy_sprite[4] = al_load_bitmap("resources/candy/candy5.png");   //Ponteiro de sprite 4
+  candy_sprite[5] = al_load_bitmap("resources/candy/special_candy1.png");   //Ponteiro de sprite 4
+  candy_sprite[6] = al_load_bitmap("resources/candy/special_candy2.png");   //Ponteiro de sprite 4
+  candy_sprite[7] = al_load_bitmap("resources/candy/special_candy3.png");   //Ponteiro de sprite 4
+  candy_sprite[8] = al_load_bitmap("resources/candy/special_candy4.png");   //Ponteiro de sprite 4
+  candy_sprite[9] = al_load_bitmap("resources/candy/special_candy5.png");   //Ponteiro de sprite 4
 
   JEWEL **board;  //Altura BOARD_N+1 e comprimento BOARD_N
-
   board = malloc( sizeof(JEWEL *) * (BOARD_N+1) );            //Vetor de ponteiros
   must_init(board, "Board Pointers");
   board[0] = malloc( sizeof(JEWEL) * BOARD_N * (BOARD_N+1) ); //Matriz com todos os doces
@@ -423,7 +424,8 @@ int board_check(JEWEL **board){
   for (int i=1; i<BOARD_N+1 ;i++)
     for (int j=0; j<BOARD_N-2 ;j++){
       int tipo = board[i][j].type;
-      if (board[i][j+1].type == tipo && board[i][j+2].type == tipo)
+      if ( (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5 ) && //Testa joias a direita
+           (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5 ) )
         return 1;
     }
 
@@ -431,14 +433,15 @@ int board_check(JEWEL **board){
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=0; j<BOARD_N ;j++){
       int tipo = board[i][j].type;
-      if (board[i+1][j].type == tipo && board[i+2][j].type == tipo)
+      if ( (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5 ) && //Testa joias a baixo
+           (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5 ) )
         return 1;
     }
 
   return 0; //Não foi marcado ponto
 }
 
-//Troca joias do board de posicao
+//Troca joias de posicao logicamente
 void switch_jewel_position(JEWEL **board, int x, int y, int z, int w){
 
   int tipo = board[x][y].type;
@@ -446,7 +449,7 @@ void switch_jewel_position(JEWEL **board, int x, int y, int z, int w){
   board[z][w].type = tipo;
 }
 
-//Movimenta troca de doces
+//Renderiza troca de joias
 void switch_movement(JEWEL **board, int i_clk, int j_clk, int i_rls, int j_rls, int direction){
 
   int horizontal, vertical;
@@ -473,12 +476,12 @@ void switch_movement(JEWEL **board, int i_clk, int j_clk, int i_rls, int j_rls, 
   }
 }
 
-//Troca joias de posição, renderiza e testa se deve desfazer
+//Renderiza troca de joias e testa se deve desfazer
 void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse){
   int *i_clk = &(mouse->i_clk), *j_clk = &(mouse->j_clk);   //Coordenadas board click
   int *i_rls = &(mouse->i_rls), *j_rls = &(mouse->j_rls);   //Coordenadas board release
-  int *x_jewel_clk = &(global_state->x_jewel_clk), *y_jewel_clk = &(global_state->y_jewel_clk);
-  int *x_jewel_rls = &(global_state->x_jewel_rls), *y_jewel_rls = &(global_state->y_jewel_rls);
+  int *x_jewel_clk = &(global_state->x_jewel_clk), *y_jewel_clk = &(global_state->y_jewel_clk);   //Coordenada de trocas 
+  int *x_jewel_rls = &(global_state->x_jewel_rls), *y_jewel_rls = &(global_state->y_jewel_rls);   //Coordenada de trocas
 
   switch ( global_state->jewel_state ){
     case JEWEL_GO:
@@ -513,427 +516,357 @@ void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse){
   }
 }
 
+//Verifica mathpoint
+int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
+
+  switch ( match_type ){
+    case 1:                                                                         //Caso simples
+      if ( board[i][j].type == tipo || abs(tipo-board[i][j].type) == 5 )
+        return 1;
+    break;
+      
+    case 2:                                                                         //Caso horizontal
+      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&      //Testa joias a direita
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5))
+        return 1;
+    break;
+
+    case 3:                                                                         //Caso vertical
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5 ) &&     //Testa joias a baixo
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5 )) 
+        return 1;
+    break;
+
+    case 4:   //Caso L
+      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == 5) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5))
+        return 1;
+    break;
+
+    case 5:   //Caso L contrario
+      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == 5) &&
+          (board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == 5))
+        return 1;
+    break;
+
+    case 6:   //Caso L de ponta-cabeca
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5))
+        return 1;
+    break;
+
+    case 7:   //Caso L contrario de ponta-cabeca
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i][j].type) == 5) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i][j].type) == 5) &&
+          (board[i][j-1].type == tipo || abs(tipo-board[i][j].type) == 5) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j].type) == 5))
+        return 1;
+    break;
+
+    case 8:   //Caso T
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5))
+        return 1;
+    break;
+
+    case 9:   //Caso T de ponta-cabeca
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == 5))
+        return 1;
+    break;
+
+    case 10:  //Caso T deitado esquerda
+      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5))
+        return 1;
+    break;
+
+    case 11:  //Caso T deitado Direita
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == 5) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5))
+        return 1;
+    break;
+  }
+
+  return 0;
+}
+
+
+//Seta draw para 0 a posicao de uma peça especial
+void hide_special_explosion(JEWEL **board, int i, int j){
+  // i pode ir de 1 a 8 e j pode ir de 0 a 7
+  
+  // a começa em j-1 e pode ir até i+1 ou i+2
+  // b pode começar em j ou j-1 e pode ir até j+1 ou j+2
+  int a_end = i+2,  b_start = j-1,   b_end = j+2;
+
+  //Remove tipo especial para não backtraking infinito
+  board[i][j].type -= 5;
+
+  if ( j == 0 )               
+    b_start = j;
+  else if ( j == BOARD_N-1 )  
+    b_end = j+1;
+  if ( i == BOARD_N )         
+    a_end = i+1;
+
+  for (int a=i-1; a<a_end ;a++)
+    for (int b=b_start; b<b_end  ;b++){
+      board[a][b].draw = 0;
+      if ( board[a][b].type > 4 && board[a][b].type < 10 )
+        hide_special_explosion(board, a, b);
+    }
+}
+
+//Seta draw para 0 de acordo com switch
+void hide_pieces(JEWEL **board, int tipo, int i, int j, int match_type){
+
+  switch ( match_type ){
+    case 1:   //Caso em L
+      board[i-1][j].draw = 0; board[i][j+1].draw = 0;
+      board[i-2][j].draw = 0; board[i][j+2].draw = 0;
+      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);      
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
+    break;
+
+    case 2:   //Caso de L invertido
+      board[i-1][j].draw = 0; board[i][j-1].draw = 0;
+      board[i-2][j].draw = 0; board[i][j-2].draw = 0;
+      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);      
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
+      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
+    break;
+
+    case 3:   //Caso de L de ponta-cabeca 
+      board[i+1][j].draw = 0; board[i][j+1].draw = 0;
+      board[i+2][j].draw = 0; board[i][j+2].draw = 0;
+      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
+    break;
+
+    case 4:   //Caso de L invertido de ponta-cabeca
+      board[i+1][j].draw = 0; board[i][j-1].draw = 0;
+      board[i+2][j].draw = 0; board[i][j-2].draw = 0;
+      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);      
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
+      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
+    break;
+
+    case 5:   //Caso de T em pé
+      board[i][j-1].draw = 0; board[i+1][j].draw = 0;
+      board[i][j+1].draw = 0; board[i+2][j].draw = 0;
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
+    break;
+
+    case 6:   //Caso de T de ponta-cabeca
+      board[i][j-1].draw = 0; board[i-1][j].draw = 0;
+      board[i][j+1].draw = 0; board[i-2][j].draw = 0;
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
+    break;
+
+    case 7:   //Caso de T deitado para esquerda
+      board[i][j+1].draw = 0; board[i-1][j].draw = 0;
+      board[i][j+2].draw = 0; board[i+1][j].draw = 0;
+      if      ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);      
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+    break;
+
+    case 8:   //Caso de T deitado para direita
+      board[i][j-1].draw = 0; board[i-1][j].draw = 0;
+      board[i][j-2].draw = 0; board[i+1][j].draw = 0;
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+    break;
+  }
+
+  return;
+}
+
 //Verifica matchpoint na horizontal
 int horizontal_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall), *j_fall = &(global_state->j_jewel_fall);
-  int *k_fall = &(global_state->k_jewel_fall), *l_fall = &(global_state->l_jewel_fall);
+  int *i_fall = &(global_state->i_jewel_fall);
 
   for (int i=1; i<BOARD_N+1 ;i++)
     for (int j=0; j<BOARD_N-2 ;j++){
       int tipo = board[i][j].type;
-      if ( board[i][j+1].type == tipo && board[i][j+2].type == tipo ){  //Matchpoint horizontal
+      if ( matchpoint_verify(board, tipo, i, j, 2) ){
         int k = j+3;
-        while ( k < BOARD_N && board[i][k].type == tipo )
-          k++;
-        *i_fall = i; *j_fall = j;
-        *k_fall = k; *l_fall = -1;
-        for (; j<k ;j++)    //Esconde doces sequenciados
-          board[i][j].draw = 0;
-        return 1; } }
+        while ( k < BOARD_N && matchpoint_verify(board, tipo, i, k, 1) ) k++;         //Pega joias sequenciadas
+        for (int aux=j; aux<k ;aux++)                                                 //Esconde doces sequenciados
+          if ( board[i][aux].type > 4 )   hide_special_explosion(board, i, aux);
+          else                            board[i][aux].draw = 0;
+        if ( k-j == 5 ){
+          board[i][j+2].type += 5;
+          board[i][j+2].draw = 1;
+        }
+        *i_fall = 1;
+        return k-j; } }
 
   return 0;
 }
 
 //Verifica matchpoint na vertical
 int vertical_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall), *j_fall = &(global_state->j_jewel_fall);
-  int *k_fall = &(global_state->k_jewel_fall), *l_fall = &(global_state->l_jewel_fall);
+  int *i_fall = &(global_state->i_jewel_fall);
 
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=0; j<BOARD_N ;j++){
       int tipo = board[i][j].type;
-      if ( board[i+1][j].type == tipo && board[i+2][j].type == tipo ){ //Triple candy
+      if ( matchpoint_verify(board, tipo, i, j, 3) ){
         int k = i+3;
-        while ( k < BOARD_N+1 && board[k][j].type == tipo)
-          k++;
-        *i_fall = i;  *j_fall = j;
-        *k_fall = -1; *l_fall = k;
-        for (; i<k ;i++)    //Esconde doces sequenciados
-          board[i][j].draw = 0;
-        return 1; } }
+        while ( k < BOARD_N+1 && matchpoint_verify(board, tipo, k, j, 1) ) k++;       //Pega joias sequenciadas
+        for (int aux=i; aux<k ;aux++)                                                 //Esconde doces sequenciados
+          if ( board[aux][j].type > 4 )   hide_special_explosion(board, aux, j);
+          else                            board[aux][j].draw = 0;
+        if ( k-i == 5 ){
+          board[i+2][j].type += 5;
+          board[i+2][j].draw = 1;
+        }
+        *i_fall = 1;
+        return k-i; } }
  
   return 0;
 }
 
+
 //Verifica matchpoint de L em pe
-int l_em_pe(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall), *j_fall = &(global_state->j_jewel_fall);
-  int *k_fall = &(global_state->k_jewel_fall), *l_fall = &(global_state->l_jewel_fall);
+int L_test(JEWEL **board, STATES *global_state){
+  int *i_fall = &(global_state->i_jewel_fall);
 
   //Verifica l normal
   for (int i=3; i<BOARD_N+1 ;i++)                                         //Vai de 3 a 8
     for (int j=0; j<BOARD_N-2 ;j++){                                      //Vai de 0 a 5
       int tipo = board[i][j].type;
-      if ( board[i-1][j].type == tipo && board[i-2][j].type == tipo &&    //Verifica para cima
-           board[i][j+1].type == tipo && board[i][j+2].type == tipo ){    //Verifica para direita
-        *i_fall = i; *j_fall = j;
-        *l_fall = i-3; *k_fall = j+3;
-        for (int k=i; k>*l_fall ;k--)                                     //Apaga joias
-          board[k][j].draw = 0;
-        board[i][j+1].draw = 0;
-        board[i][j+2].draw = 0;
+      if ( matchpoint_verify(board, tipo, i, j, 4) ){
+        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
+        hide_pieces(board, tipo, i, j, 1);                                //Escode joias a descer
+        *i_fall = i-2;                                                    //Ponteiro da queda
         return 1; } }
 
   //Verifica l invertido
-  for (int i=3; i<BOARD_N+1 ;i++)       //Vai de 3 a 8
-    for (int j=2; j<BOARD_N ;j++){      //Vai de 2 a 7
+  for (int i=3; i<BOARD_N+1 ;i++)                                         //Vai de 3 a 8
+    for (int j=2; j<BOARD_N ;j++){                                        //Vai de 2 a 7
       int tipo = board[i][j].type;
-      if ( board[i-1][j].type == tipo && board[i-2][j].type == tipo &&    //Verifica para cima
-           board[i][j-1].type == tipo && board[i][j-2].type == tipo ){    //Verifica para esquerda
-        *i_fall = i; *j_fall = j;
-        *l_fall = i-3; *k_fall = j-3;
-        for (int k=i; k>*l_fall ;k--)                                     //Apaga joias
-          board[k][j].draw = 0;
-        board[i][j-1].draw = 0;
-        board[i][j-2].draw = 0;
+      if ( matchpoint_verify(board, tipo, i, j, 5) ){
+        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
+        hide_pieces(board, tipo, i, j, 2);                                //Esconde joias a descer
+        *i_fall = i-2;                                                    //Ponteiro da queda
         return 1; } }
-  return 0;
-}
-
-//Verifica matchpoint de L de ponta-cabeca
-int l_ponta_cabeca(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall), *j_fall = &(global_state->j_jewel_fall);
-  int *k_fall = &(global_state->k_jewel_fall), *l_fall = &(global_state->l_jewel_fall);
 
   //Verifica l de ponta-cabeça
-  for (int i=1; i<BOARD_N-1 ;i++)       //Vai de 1 a 6
-    for (int j=0; j<BOARD_N-2 ;j++){    //Vai de 0 a 5
+  for (int i=1; i<BOARD_N-1 ;i++)                                         //Vai de 1 a 6
+    for (int j=0; j<BOARD_N-2 ;j++){                                      //Vai de 0 a 5
       int tipo = board[i][j].type;
-      if ( board[i+1][j].type == tipo && board[i+2][j].type == tipo &&    //Verifica para baixo
-           board[i][j+1].type == tipo && board[i][j+2].type == tipo ){    //Verifica para Direita
-        *i_fall = i; *j_fall = j;
-        *l_fall = i+3; *k_fall = j+3;
-        for (int k=i; k<*l_fall ;k++)                                     //Apaga joias
-          board[k][j].draw = 0;
-        board[i][j+1].draw = 0;
-        board[i][j+2].draw = 0;
+      if ( matchpoint_verify(board, tipo, i, j, 6) ){
+        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
+        hide_pieces(board, tipo, i, j, 3);                                //Esconde joias a descer
+        *i_fall = i;                                                      //Ponteiro da queda
         return 1; } }
 
   //Verifica l invertido e de ponta-cabeça
-  for (int i=1; i<BOARD_N-1 ;i++)       //Vai de 1 a 6
-    for (int j=2; j<BOARD_N ;j++){      //Vai de 0 a 5
+  for (int i=1; i<BOARD_N-1 ;i++)                                         //Vai de 1 a 6
+    for (int j=2; j<BOARD_N ;j++){                                        //Vai de 2 a 7
       int tipo = board[i][j].type;
-      if ( board[i+1][j].type == tipo && board[i+2][j].type == tipo &&    //Verifica para baixo
-           board[i][j-1].type == tipo && board[i][j-2].type == tipo ){    //Verifica para esquerda
-        *i_fall = i; *j_fall = j;
-        *l_fall = i+3; *k_fall = j-3;
-        for (int k=i; k<*l_fall ;k++)                                     //Apaga joias
-          board[k][j].draw = 0;
-        board[i][j-1].draw = 0;
-        board[i][j-2].draw = 0;
+      if ( matchpoint_verify(board, tipo, i, j, 7) ){
+        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
+        hide_pieces(board, tipo, i, j, 4);                                //Esconde joias a descer
+        *i_fall = i;                                                      //Ponteiro da queda
         return 1; } }
 
   return 0;
 }
 
-//Cascata de joias
-int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
-  int *i_fall = &(global_state->i_jewel_fall), *j_fall = &(global_state->j_jewel_fall);
-  int *k_fall = &(global_state->k_jewel_fall), *l_fall = &(global_state->l_jewel_fall);
+int T_test(JEWEL **board, STATES *global_state){
+  int *i_fall = &(global_state->i_jewel_fall);
 
-  switch ( global_state->fall_state ){
-    case TEST_FALL:
+  //Verifica T em pe
+  for (int i=1; i<BOARD_N-1 ;i++)
+    for (int j=1; j<BOARD_N-1; j++){
+      int tipo = board[i][j].type;
+      if ( matchpoint_verify(board, tipo, i, j, 8) ){
+        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        hide_pieces(board, tipo, i, j, 5);
+        *i_fall = i;
+      return 1; } }
 
-      if ( l_em_pe(board, global_state) ){
-        game_score->score += 100 * 5;                                     //Marca ponto de 5 joias
-        snprintf(game_score->str_score, 20, "%d", game_score->score);
-        global_state->fall_state = L_FALL_EM_PE;                          //Atualiza estado
-        return 1;
-      } else if ( l_ponta_cabeca(board, global_state) ){
-        game_score->score += 100 * 5;                                     //Marca ponto de 5 joias
-        snprintf(game_score->str_score, 20, "%d", game_score->score);
-        global_state->fall_state = L_FALL_PONTA_CABECA;                   //Atualiza estado
-        return 1;
-      } else if ( horizontal_test(board, global_state) ){
-        //Marca pontuacao horizontal
-        game_score->score += (*k_fall - *j_fall) * 100;
-        snprintf(game_score->str_score, 20, "%d", game_score->score);
-        global_state->fall_state = HORIZONTAL_FALL;
-        return 1;
-      } else if ( vertical_test(board, global_state) ){
-        //Marca pontuacao vertical
-        game_score->score += (*l_fall - *i_fall) * 100;
-        snprintf(game_score->str_score, 20, "%d", game_score->score);
-        global_state->fall_state = VERTICAL_FALL;
-        return 1;
-      }
+  //Verifica T de ponta cabeca
+  for (int i=3; i<BOARD_N+1 ;i++)
+    for (int j=1; j<BOARD_N-1; j++){
+      int tipo = board[i][j].type;
+      if ( matchpoint_verify(board, tipo, i, j, 9) ){
+        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        hide_pieces(board, tipo, i, j, 6);
+        *i_fall = i;
+      return 1; } }
 
-     //Não achou inconsistencia
-      global_state->board_state = BOARD_NEW_PLAY;
-      return 0;
-      break;
+  //Verifica T deitado para esquerda
+  for (int i=2; i<BOARD_N ;i++)
+    for (int j=0; j<BOARD_N-2; j++){
+      int tipo = board[i][j].type;
+      if ( matchpoint_verify(board, tipo, i, j, 10) ){
+        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        hide_pieces(board, tipo, i, j, 7);
+        *i_fall = i-1;
+      return 1; } }
 
-    case L_FALL_EM_PE:
-      if ( *l_fall >= *i_fall-2 ){ //Caso das ultimas 2 peças a descer
-        if ( board[*l_fall][*j_fall].y == board[*l_fall+1][*j_fall].y ) { //Se terminou de descer
-          //Restaura y
-          for (int i=*l_fall; i>-1 ;i--)
-            board[i][*j_fall].y -= JEWEL_SIZE;
-          //Permite renderizar
-          board[*l_fall+1][*j_fall].draw = 1;
-          //Atualiza tipos
-          for (int i=*l_fall+1; i>0 ;i--)
-            board[i][*j_fall].type = board[i-1][*j_fall].type;
-          board[0][*j_fall].type = between(0, JEWEL_TYPE_N);
-          //Desrenderiza linha 0
-          board[0][*j_fall].draw = 0;
-          //Atualiza l
-          (*l_fall)++;
-          //Se terminou de descer, faz outro teste
-          if ( *l_fall == *i_fall )
-            global_state->fall_state = TEST_FALL;
+  //Verifica T deitado para direita
+  for (int i=2; i<BOARD_N ;i++)
+    for (int j=2; j<BOARD_N; j++){
+      int tipo = board[i][j].type;
+      if ( matchpoint_verify(board, tipo, i, j, 11) ){
+        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        hide_pieces(board, tipo, i, j, 8);
+        *i_fall = i-1;
+      return 1; } }
 
-        } else {
-          //Renderiza joia caindo
-          for (int i=*l_fall; i>-1 ;i--)
-            board[i][*j_fall].y += FALL_SPEED;
-          //Testa render da linha 0
-          if ( board[0][*j_fall].y == Y_OFFSET - 40 )
-            board[0][*j_fall].draw = 1;
-        }
-      } else { //CASO DAS 3 PRIMEIRAS PEÇAS 
-        //Se terminou de descer as 3 primeiras peças
-        if ( board[*l_fall][*j_fall].y == board[*l_fall+1][*j_fall].y ){
-          //Restaura y
-          for (int i=*l_fall; i>-1 ;i--)                //Sobe peças da coluna
-            board[i][*j_fall].y -= JEWEL_SIZE;
-          for (int i=*i_fall-1; i>-1 ;i--)              //Sobe peças da linha
-            if ( *j_fall < *k_fall ) {
-              board[i][*j_fall+1].y -= JEWEL_SIZE;
-              board[i][*j_fall+2].y -= JEWEL_SIZE;
-            } else {
-              board[i][*j_fall-1].y -= JEWEL_SIZE;
-              board[i][*j_fall-2].y -= JEWEL_SIZE; }
-          //Permite renderizar
-          board[*l_fall+1][*j_fall].draw = 1;
-          if ( *j_fall < *k_fall ) {
-            board[*i_fall][*j_fall+1].draw = 1;
-            board[*i_fall][*j_fall+2].draw = 1;
-          } else {
-            board[*i_fall][*j_fall-1].draw = 1;
-            board[*i_fall][*j_fall-2].draw = 1; }
-          //Troca tipos
-          for (int i=*l_fall+1; i>0 ;i--)
-            board[i][*j_fall].type = board[i-1][*j_fall].type;
-          board[0][*j_fall].type = between(0, JEWEL_TYPE_N);
-          for (int i=*i_fall; i>0 ;i--)
-            if ( *j_fall < *k_fall ) {
-              board[i][*j_fall+1].type = board[i-1][*j_fall+1].type;
-              board[i][*j_fall+2].type = board[i-1][*j_fall+2].type;
-            } else {
-              board[i][*j_fall-1].type = board[i-1][*j_fall-1].type;
-              board[i][*j_fall-2].type = board[i-1][*j_fall-2].type; }
-          if ( *j_fall < *k_fall ) {
-            board[0][*j_fall+1].type = between(0, JEWEL_TYPE_N);
-            board[0][*j_fall+2].type = between(0, JEWEL_TYPE_N);
-          } else {
-            board[0][*j_fall-1].type = between(0, JEWEL_TYPE_N);
-            board[0][*j_fall-2].type = between(0, JEWEL_TYPE_N); }
-          //Esconde linha 0
-          board[0][*j_fall].draw = 0;
-          if ( *j_fall < *k_fall ) {
-            board[0][*j_fall+1].draw = 0;
-            board[0][*j_fall+2].draw = 0;
-          } else {
-            board[0][*j_fall-1].draw = 0;
-            board[0][*j_fall-2].draw = 0; }
-
-          //Atualiza l
-          (*l_fall)++;
-        } else {  
-          //Renderiza joia caindo
-          for (int i=*l_fall; i>-1 ;i--)          //Desce uma joia da coluna
-            board[i][*j_fall].y += FALL_SPEED;
-          for (int i=*i_fall-1; i>-1 ;i--)        //Desce as joias da linha
-            if ( *j_fall < *k_fall ) {
-              board[i][*j_fall+1].y += FALL_SPEED;
-              board[i][*j_fall+2].y += FALL_SPEED;
-            } else {
-              board[i][*j_fall-1].y += FALL_SPEED;
-              board[i][*j_fall-2].y += FALL_SPEED;
-            }
-          //Testa render da linha 0
-          if ( board[0][*j_fall].y == Y_OFFSET - 40 ){
-            board[0][*j_fall].draw = 1;
-            if ( *j_fall < *k_fall ) {
-              board[0][*j_fall+1].draw = 1;
-              board[0][*j_fall+2].draw = 1;
-            } else {
-              board[0][*j_fall-1].draw = 1;
-              board[0][*j_fall-2].draw = 1;
-            }
-          }
-        } //Se terminou de descer
-      }
-    break;
-
-    case L_FALL_PONTA_CABECA:
-      if ( *i_fall >= *l_fall-2 ) {  //Caso das 2 peças
-        //Testa se desceu a peça
-        if ( board[*i_fall-1][*j_fall].y == board[*i_fall][*j_fall].y ){
-          //Restaura y
-          for (int i=*i_fall-1; i>-1 ;i--)
-            board[i][*j_fall].y -= JEWEL_SIZE;
-          //Permite renderizar
-          board[*i_fall][*j_fall].draw = 1;
-          //Atualiza tipos
-          for (int i=*i_fall; i>0 ;i--)
-            board[i][*j_fall].type = board[i-1][*j_fall].type;
-          board[0][*j_fall].type = between(0, JEWEL_TYPE_N);
-          //Apaga linha 0
-          board[0][*j_fall].draw = 0;
-          //Atualiza i
-          (*i_fall)++;
-          //Se terminou de descer. faz outro teste
-          if ( *i_fall == *l_fall )
-            global_state->fall_state = TEST_FALL;
-
-        } else {
-          //Renderiza peças
-          for (int i=*i_fall-1; i>-1 ;i--)
-            board[i][*j_fall].y += FALL_SPEED;
-          //Testa render da linha 0
-          if ( board[0][*j_fall].y == Y_OFFSET-40 )
-            board[0][*j_fall].draw = 1;
-
-        }
-      } else {  //Caso das 3 peças
-        //Testa se desceu as 3 peças
-        if ( board[*i_fall-1][*j_fall].y == board[*i_fall][*j_fall].y ) {
-          //Restaura y
-          for (int i=*i_fall-1; i>-1 ;i--)
-            if ( *j_fall < *k_fall )
-              for (int j=*j_fall; j<*k_fall ;j++)
-                board[i][j].y -= JEWEL_SIZE;
-            else
-              for (int j=*k_fall+1; j<=*j_fall ;j++)
-                board[i][j].y -= JEWEL_SIZE;
-          //Permite renderizar
-          if ( *j_fall < *k_fall )
-            for (int j=*j_fall; j<*k_fall ;j++)
-              board[*i_fall][j].draw = 1;
-          else
-            for (int j=*k_fall+1; j<=*j_fall ;j++)
-              board[*i_fall][j].draw = 1;
-          //Troca tipos
-          for (int i=*i_fall; i>0 ;i--)
-            if ( *j_fall < *k_fall )
-              for (int j=*j_fall; j<*k_fall ;j++)
-                board[i][j].type = board[i-1][j].type;
-            else
-              for (int j=*k_fall+1; j<=*j_fall ;j++)
-                board[i][j].type = board[i-1][j].type;
-          if ( *j_fall < *k_fall )
-            for (int j=*j_fall; j<*k_fall ;j++)
-              board[0][j].type = between(0, JEWEL_TYPE_N);
-          else
-            for (int j=*k_fall+1; j<=*j_fall ;j++)
-              board[0][j].type = between(0, JEWEL_TYPE_N);
-          //Apaga linha 0
-          if ( *j_fall < *k_fall )
-            for (int j=*j_fall; j<*k_fall ;j++)
-              board[0][j].draw = 0;
-          else
-            for (int j=*k_fall+1; j<=*j_fall ;j++)
-              board[0][j].draw = 0;
-
-          //Muda pra caso de 2 peças
-          (*i_fall)++;
-        } else {
-          //Renderiza joia caindo
-          for (int i=*i_fall-1; i>-1 ;i--)
-            if ( *j_fall < *k_fall )
-              for (int j=*j_fall; j<*k_fall ;j++)
-                board[i][j].y += FALL_SPEED;
-            else
-              for (int j=*k_fall+1; j<=*j_fall ;j++)
-                board[i][j].y += FALL_SPEED;
-          //Testa render da linha 0
-          if ( board[0][*j_fall].y == Y_OFFSET - 40){
-            if ( *j_fall < *k_fall ){
-              for (int j=*j_fall; j<*k_fall ;j++)
-                board[0][j].draw = 1;
-            } else {
-              for (int j=*k_fall+1; j<=*j_fall ;j++)
-                board[0][j].draw = 1;
-            } }
-
-        }
-      } //Caso de 2 ou 3 peças
-    break;
-
-    case HORIZONTAL_FALL:
-      //Se joia terminou de descer
-      if ( board[*i_fall-1][*j_fall].y == board[*i_fall][*j_fall].y ){
-        //Restaura posição do y horizontal
-        for (int i=*i_fall-1; i>-1 ;i--)
-          for (int j=*j_fall; j<*k_fall ;j++)
-            board[i][j].y -= JEWEL_SIZE;
-        //Permite renderizar horizontal
-        for (int j=*j_fall; j<*k_fall ;j++)
-          board[*i_fall][j].draw = 1;
-        //Atualiza tipo de doce horizontal
-        for (int i=*i_fall; i>0 ;i--)
-          for (int j=*j_fall; j<*k_fall ;j++)
-            board[i][j].type = board[i-1][j].type;
-        for (int j=*j_fall; j<*k_fall ;j++)
-          board[0][j].type = between(0, JEWEL_TYPE_N);
-        //Apaga linha zero
-        for (int j=*j_fall; j<*k_fall ;j++)
-          board[0][j].draw = 0;
-
-        //terminou de descer, faz outro teste
-        global_state->fall_state = TEST_FALL;
-      } else {
-        //Movimenta joias
-        for (int i=*i_fall-1; i>-1 ;i--)
-          for (int j=*j_fall; j<*k_fall ;j++)
-            board[i][j].y += FALL_SPEED;
-        //Teste de renderização da linha 0
-        if ( board[0][*j_fall].y == Y_OFFSET - 40 )
-          for (int j=*j_fall; j<*k_fall ;j++)
-            board[0][j].draw = 1;
-      }
-      break;
-
-    case VERTICAL_FALL:
-      //Se terminou de descer tudo
-      if ( *i_fall == *l_fall){
-        board[0][*j_fall].draw = 0;             //Apaga doce da linha zero
-        global_state->fall_state = TEST_FALL;   //Manda testar matchpoint
-      } else
-        //Se terminou de descer uma posição
-        if ( board[*i_fall-1][*j_fall].y == board[*i_fall][*j_fall].y){
-          //Restaura posição do y vertical
-          for ( int i=*i_fall-1; i>-1 ;i--)
-            board[i][*j_fall].y -= JEWEL_SIZE;
-          //Permite joia em i renderizar e apaga primeira joia
-          board[*i_fall][*j_fall].draw = 1; board[0][*j_fall].draw = 0;
-          //Atualiza tipos
-          for (int i=*i_fall; i>0 ;i--)
-            board[i][*j_fall].type = board[i-1][*j_fall].type;
-          board[0][*j_fall].type = between(0, JEWEL_TYPE_N);
-
-          //Desce ponteiro do i_jewel_fall
-          (*i_fall)++;
-        } else {
-          //Movimenta joias
-          for (int i=*i_fall-1; i>-1 ;i--)
-            board[i][*j_fall].y += FALL_SPEED;
-          //Se peça da linha zero deve renderizar
-          if ( board[0][*j_fall].y == Y_OFFSET - 40 )
-              board[0][*j_fall].draw = 1;
-        }
-      break; }
-
-  return 1;
+  return 0;
 }
 
-int modulo (int x, int y){
-  if ( x > y )
-    return x - y;
-  else
-    return y - x;
+int star_test(JEWEL **board, STATES *global_state){
+  int *i_fall = &(global_state->i_jewel_fall);
+
+  for (int i=1; i<BOARD_N-1 ;i++)
+    for (int j=1; j<BOARD_N-1 ;j++){
+      int tipo = board[i][j].type;
+      if ( board[i+1][j-1].type == tipo && board[i+1][j].type == tipo &&
+           board[i+1][j+1].type == tipo && board[i+2][j].type == tipo ){
+        *i_fall = i;
+        board[i][j].draw = 0;
+        board[i+1][j-1].draw = 0;  board[i+1][j].draw = 0;
+        board[i+1][j+1].draw = 0;  board[i+2][j].draw = 0;
+        return 1; } }
+
+  return 0;
 }
 
 
@@ -951,8 +884,8 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
         (mouse->y_rls > Y_OFFSET && mouse->y_rls < DISP_H-20) )
      //testa se houve movimento
      if ( mouse->x_clk != mouse->x_rls || mouse->y_clk != mouse->y_rls ) {
-       int h_delta     = modulo(mouse->x_clk, mouse->x_rls);
-       int v_delta     = modulo(mouse->y_clk, mouse->y_rls);
+       int h_delta     = abs(mouse->x_clk-mouse->x_rls);
+       int v_delta     = abs(mouse->y_clk-mouse->y_rls);
        int horizontal  = mouse->x_rls - mouse->x_clk;
        int vertical    = mouse->y_rls - mouse->y_clk;
 
@@ -980,12 +913,125 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
            *x_jewel_rls = board[*i_rls][*j_rls].x;       //Salva as coordenadas da troca
            *y_jewel_rls = board[*i_rls][*j_rls].y;       //Salva as coordenadas da troca
            global_state->board_state = BOARD_SWITCH_JEWEL;
-         }
-       }
-     }
+         } } }
 
   return;
 }
+
+void imprime_board(JEWEL **board){
+
+  for (int i=0; i<BOARD_N+1 ;i++){
+    for (int j=0; j<BOARD_N ;j++){
+      printf("[%d][%d] ", i, j);
+    }
+    printf("\n");
+    for (int j=0; j<BOARD_N ;j++){
+      if ( board[i][j].type == 0 )
+        printf(" %c  %d  ", 'a', board[i][j].draw);
+      else if ( board[i][j].type == 1 )
+        printf(" %c  %d  ", 'b', board[i][j].draw);
+      else if ( board[i][j].type == 2 )
+        printf(" %c  %d  ", 'c', board[i][j].draw);
+      else if ( board[i][j].type == 3 )
+        printf(" %c  %d  ", 'd', board[i][j].draw);
+      else if ( board[i][j].type == 4 )
+        printf(" %c  %d  ", 'e', board[i][j].draw);
+      else if ( board[i][j].type == 5 )
+        printf(" %c  %d  ", 'f', board[i][j].draw);
+      else if ( board[i][j].type == 6 )
+        printf(" %c  %d  ", 'g', board[i][j].draw);
+      else if ( board[i][j].type == 7 )
+        printf(" %c  %d  ", 'h', board[i][j].draw);
+      else if ( board[i][j].type == 8 )
+        printf(" %c  %d  ", 'i', board[i][j].draw);
+      else if ( board[i][j].type == 9 )
+        printf(" %c  %d  ", 'j', board[i][j].draw);
+    }
+    printf("\n");
+  }
+    printf("\n");
+    printf("\n");
+  return;
+}
+
+// Renderiza joias caindo
+// Retorna 1 se tiver joia para cair
+// Retorna 0 do contrario
+int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
+  int *i_fall = &(global_state->i_jewel_fall);
+  int *fall_flag = &(global_state->fall_flag);
+
+  switch ( global_state->fall_state ){
+
+    case TEST_FALL:
+      imprime_board(board);
+      if ( T_test(board, global_state) || L_test(board, global_state) || star_test(board, global_state) ) {
+        game_score->score += 500;
+        snprintf(game_score->str_score, 20, "%d", game_score->score);
+        global_state->fall_state = RENDER_FALL;
+        *fall_flag = 1;
+        return 1;
+      } else {
+        int jewel_number = horizontal_test(board, global_state);
+        if ( jewel_number ){
+          game_score->score += 100 * jewel_number;
+          snprintf(game_score->str_score, 20, "%d", game_score->score);
+          global_state->fall_state = RENDER_FALL;
+          *fall_flag = 1;
+          return 1;
+        } else {
+          jewel_number = vertical_test(board, global_state);
+          if ( jewel_number ){
+            game_score->score += 100 * jewel_number;
+            snprintf(game_score->str_score, 20, "%d", game_score->score);
+            global_state->fall_state = RENDER_FALL;
+            *fall_flag = 1;
+            return 1;
+          }  else
+            global_state->board_state = BOARD_NEW_PLAY;   //Nao ha mais matchpoints
+        } }
+    return 0;
+    
+    //Renderiza joias caindo na linha *i_fall
+    case RENDER_FALL:
+      for (int j=0; j<BOARD_N ;j++){
+        //Se encontrou joia para renderizar
+        if ( board[*i_fall][j].draw == 0 ){
+          //Marca como achou e marca que não terminou de renderizar
+          *fall_flag = 0;
+          if ( board[*i_fall-1][j].y == board[*i_fall][j].y ){     //Se joia tiver terminado de cair
+
+            //restaura y
+            for (int i=*i_fall-1; i>-1 ;i--)
+              board[i][j].y -= JEWEL_SIZE;
+            //Troca tipos
+            for (int i=*i_fall; i>0 ;i--)
+              board[i][j].type = board[i-1][j].type;
+            board[0][j].type = between(0, JEWEL_TYPE_N);
+            //Permite renderizar e apaga linha zero
+            board[*i_fall][j].draw = 1;
+            board[0][j].draw = 0;
+            //Passa para proxima linha se tiver renderizado tudo
+            *fall_flag = 1;
+            
+          } else {
+            //Renderiza
+            for (int i=*i_fall-1; i>-1 ;i--){
+              board[i][j].y += FALL_SPEED; if ( board[0][j].y > 100 ) board[0][j].draw = 1;
+            } } } }
+
+
+      //Se não houve joia para renderizar, ou terminou de renderizar
+      if ( *fall_flag == 1 ){
+        (*i_fall)++;
+        if ( *i_fall > BOARD_N )
+          global_state->fall_state = TEST_FALL;
+      }
+    break;
+  }
+  return 1;
+}
+
 
 
 void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse, SCORE *game_score){
@@ -1051,7 +1097,7 @@ int main(){
   stars_init(stars);
   SCORE *game_score;                                      //Variavel de score
   game_score = score_init();
-  JEWEL **board; ALLEGRO_BITMAP *candy_sprite[5];         //Variavel do tabuleiro e vetor de sprites
+  JEWEL **board; ALLEGRO_BITMAP *candy_sprite[10];         //Variavel do tabuleiro e vetor de sprites
   board = board_init(candy_sprite);
   STATES global_state;                                    //Variavel de maquina de estados
   state_init(&global_state);

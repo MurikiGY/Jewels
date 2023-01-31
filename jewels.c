@@ -350,6 +350,7 @@ typedef struct jewel {
   int x, y;                         //Coordenadas
   int type;                         //Tipo do doce
   int draw;                         //Booleano de renderizar
+  int special_gen_flag;             //Flag para saber se acabou de virar um especial
 } JEWEL;
 
 //Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
@@ -393,6 +394,7 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
       board[i][j].x = X_OFFSET + x_aux;
       board[i][j].y = Y_OFFSET + y_aux;
       board[i][j].type = between(0, JEWEL_TYPE_N);
+      board[i][j].special_gen_flag = 0;
       if ( i > 0 )
         board[i][j].draw = 1;
       else
@@ -609,7 +611,6 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
 //Seta draw para 0 a posicao de uma peça especial
 void hide_special_explosion(JEWEL **board, int i, int j){
   // i pode ir de 1 a 8 e j pode ir de 0 a 7
-  
   // a começa em j-1 e pode ir até i+1 ou i+2
   // b pode começar em j ou j-1 e pode ir até j+1 ou j+2
   int a_end = i+2,  b_start = j-1,   b_end = j+2;
@@ -617,127 +618,128 @@ void hide_special_explosion(JEWEL **board, int i, int j){
   //Remove tipo especial para não backtraking infinito
   board[i][j].type -= 5;
 
-  if ( j == 0 )               
-    b_start = j;
-  else if ( j == BOARD_N-1 )  
-    b_end = j+1;
-  if ( i == BOARD_N )         
-    a_end = i+1;
+  if ( j == 0 )               b_start = j;
+  else if ( j == BOARD_N-1 )  b_end = j+1;
+  if ( i == BOARD_N )         a_end = i+1;
 
   for (int a=i-1; a<a_end ;a++)
     for (int b=b_start; b<b_end  ;b++){
       board[a][b].draw = 0;
       if ( board[a][b].type > 4 && board[a][b].type < 10 )
-        hide_special_explosion(board, a, b);
-    }
+        hide_special_explosion(board, a, b);}
 }
 
-//Seta draw para 0 de acordo com switch
+//Seta draw para 0
+//Testa se há peças especiais e se não foram recem geradas
 void hide_pieces(JEWEL **board, int tipo, int i, int j, int match_type){
 
   switch ( match_type ){
     case 1:   //Caso em L
       board[i-1][j].draw = 0; board[i][j+1].draw = 0;
       board[i-2][j].draw = 0; board[i][j+2].draw = 0;
-      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);      
-      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
-      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
+      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 && board[i-1][j].special_gen_flag == 0 ) hide_special_explosion(board, i-1, j);      
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 && board[i-2][j].special_gen_flag == 0 ) hide_special_explosion(board, i-2, j);
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 && board[i][j+1].special_gen_flag == 0 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 && board[i][j+2].special_gen_flag == 0 ) hide_special_explosion(board, i, j+2);
     break;
 
     case 2:   //Caso de L invertido
       board[i-1][j].draw = 0; board[i][j-1].draw = 0;
       board[i-2][j].draw = 0; board[i][j-2].draw = 0;
-      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);      
-      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
-      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);
-      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
+      if      ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 && board[i-1][j].special_gen_flag == 0 ) hide_special_explosion(board, i-1, j);      
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 && board[i-2][j].special_gen_flag == 0 ) hide_special_explosion(board, i-2, j);
+      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 && board[i][j-1].special_gen_flag == 0 ) hide_special_explosion(board, i, j-1);
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 && board[i][j-2].special_gen_flag == 0 ) hide_special_explosion(board, i, j-2);
     break;
 
     case 3:   //Caso de L de ponta-cabeca 
       board[i+1][j].draw = 0; board[i][j+1].draw = 0;
       board[i+2][j].draw = 0; board[i][j+2].draw = 0;
-      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
-      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
-      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
+      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 && board[i+1][j].special_gen_flag == 0 ) hide_special_explosion(board, i+1, j);
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 && board[i+2][j].special_gen_flag == 0 ) hide_special_explosion(board, i+2, j);
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 && board[i][j+1].special_gen_flag == 0 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 && board[i][j+2].special_gen_flag == 0 ) hide_special_explosion(board, i, j+2);
     break;
 
     case 4:   //Caso de L invertido de ponta-cabeca
       board[i+1][j].draw = 0; board[i][j-1].draw = 0;
       board[i+2][j].draw = 0; board[i][j-2].draw = 0;
-      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);      
-      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
-      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);
-      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
+      if      ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 && board[i+1][j].special_gen_flag == 0 ) hide_special_explosion(board, i+1, j);      
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 && board[i+2][j].special_gen_flag == 0 ) hide_special_explosion(board, i+2, j);
+      else if ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 && board[i][j-1].special_gen_flag == 0 ) hide_special_explosion(board, i, j-1);
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 && board[i][j-2].special_gen_flag == 0 ) hide_special_explosion(board, i, j-2);
     break;
 
     case 5:   //Caso de T em pé
       board[i][j-1].draw = 0; board[i+1][j].draw = 0;
       board[i][j+1].draw = 0; board[i+2][j].draw = 0;
-      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
-      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
-      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 ) hide_special_explosion(board, i+2, j);
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 && board[i][j-1].special_gen_flag == 0 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 && board[i][j+1].special_gen_flag == 0 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 && board[i+1][j].special_gen_flag == 0 ) hide_special_explosion(board, i+1, j);
+      else if ( board[i+2][j].type >= 5 && board[i+2][j].type <= 9 && board[i+2][j].special_gen_flag == 0 ) hide_special_explosion(board, i+2, j);
     break;
 
     case 6:   //Caso de T de ponta-cabeca
       board[i][j-1].draw = 0; board[i-1][j].draw = 0;
       board[i][j+1].draw = 0; board[i-2][j].draw = 0;
-      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
-      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);
-      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
-      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 ) hide_special_explosion(board, i-2, j);
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 && board[i][j-1].special_gen_flag == 0 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 && board[i][j+1].special_gen_flag == 0 ) hide_special_explosion(board, i, j+1);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 && board[i-1][j].special_gen_flag == 0 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i-2][j].type >= 5 && board[i-2][j].type <= 9 && board[i-2][j].special_gen_flag == 0 ) hide_special_explosion(board, i-2, j);
     break;
 
     case 7:   //Caso de T deitado para esquerda
       board[i][j+1].draw = 0; board[i-1][j].draw = 0;
       board[i][j+2].draw = 0; board[i+1][j].draw = 0;
-      if      ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 ) hide_special_explosion(board, i, j+1);      
-      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 ) hide_special_explosion(board, i, j+2);
-      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
-      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+      if      ( board[i][j+1].type >= 5 && board[i][j+1].type <= 9 && board[i][j+1].special_gen_flag == 0 ) hide_special_explosion(board, i, j+1);      
+      else if ( board[i][j+2].type >= 5 && board[i][j+2].type <= 9 && board[i][j+2].special_gen_flag == 0 ) hide_special_explosion(board, i, j+2);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 && board[i-1][j].special_gen_flag == 0 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 && board[i+1][j].special_gen_flag == 0 ) hide_special_explosion(board, i+1, j);
     break;
 
     case 8:   //Caso de T deitado para direita
       board[i][j-1].draw = 0; board[i-1][j].draw = 0;
       board[i][j-2].draw = 0; board[i+1][j].draw = 0;
-      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 ) hide_special_explosion(board, i, j-1);      
-      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 ) hide_special_explosion(board, i, j-2);
-      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 ) hide_special_explosion(board, i-1, j);
-      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 ) hide_special_explosion(board, i+1, j);
+      if      ( board[i][j-1].type >= 5 && board[i][j-1].type <= 9 && board[i][j-1].special_gen_flag == 0 ) hide_special_explosion(board, i, j-1);      
+      else if ( board[i][j-2].type >= 5 && board[i][j-2].type <= 9 && board[i][j-2].special_gen_flag == 0 ) hide_special_explosion(board, i, j-2);
+      else if ( board[i-1][j].type >= 5 && board[i-1][j].type <= 9 && board[i-1][j].special_gen_flag == 0 ) hide_special_explosion(board, i-1, j);
+      else if ( board[i+1][j].type >= 5 && board[i+1][j].type <= 9 && board[i+1][j].special_gen_flag == 0 ) hide_special_explosion(board, i+1, j);
     break;
   }
-
   return;
 }
 
 //Verifica matchpoint na horizontal
 int horizontal_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall);
+  int quant = 0;
 
   for (int i=1; i<BOARD_N+1 ;i++)
     for (int j=0; j<BOARD_N-2 ;j++){
       int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 2) ){
+      if ( matchpoint_verify(board, tipo, i, j, 2) ){                                 //Se marcou ponto
         int k = j+3;
         while ( k < BOARD_N && matchpoint_verify(board, tipo, i, k, 1) ) k++;         //Pega joias sequenciadas
         for (int aux=j; aux<k ;aux++)                                                 //Esconde doces sequenciados
-          if ( board[i][aux].type > 4 )   hide_special_explosion(board, i, aux);
-          else                            board[i][aux].draw = 0;
+          //Se for especial nao gerado recentemente
+          if ( board[i][aux].type > 4 && board[i][aux].special_gen_flag == 0 )
+            hide_special_explosion(board, i, aux);
+          else                            
+            board[i][aux].draw = 0;
+
+        //Gera joia especial
         if ( k-j == 5 ){
           board[i][j+2].type += 5;
           board[i][j+2].draw = 1;
-        }
-        *i_fall = 1;
-        return k-j; } }
+          board[i][j+2].special_gen_flag = 1; }
+        quant += k-j; } }
 
-  return 0;
+  return quant;
 }
 
 //Verifica matchpoint na vertical
+//Retorna numero de joias marcadas
 int vertical_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall);
+  int quant = 0;
 
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=0; j<BOARD_N ;j++){
@@ -746,129 +748,149 @@ int vertical_test(JEWEL **board, STATES *global_state){
         int k = i+3;
         while ( k < BOARD_N+1 && matchpoint_verify(board, tipo, k, j, 1) ) k++;       //Pega joias sequenciadas
         for (int aux=i; aux<k ;aux++)                                                 //Esconde doces sequenciados
-          if ( board[aux][j].type > 4 )   hide_special_explosion(board, aux, j);
-          else                            board[aux][j].draw = 0;
+          //Se for especial nao gerado recentemente
+          if ( board[aux][j].type > 4 && board[aux][j].special_gen_flag == 0 )
+            hide_special_explosion(board, aux, j);      //Se especial, explode
+          else
+            board[aux][j].draw = 0;
+
+        //Gera joia especial
         if ( k-i == 5 ){
           board[i+2][j].type += 5;
           board[i+2][j].draw = 1;
-        }
-        *i_fall = 1;
-        return k-i; } }
- 
-  return 0;
-}
+          board[i+2][j].special_gen_flag = 1; }
+        quant += k-i; } }
 
+  return quant;
+}
 
 //Verifica matchpoint de L em pe
+//Retorna quantas joias foram destruidas
 int L_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall);
+  int quant = 0;
 
   //Verifica l normal
-  for (int i=3; i<BOARD_N+1 ;i++)                                         //Vai de 3 a 8
-    for (int j=0; j<BOARD_N-2 ;j++){                                      //Vai de 0 a 5
+  for (int i=3; i<BOARD_N+1 ;i++)                                     //Vai de 3 a 8
+    for (int j=0; j<BOARD_N-2 ;j++){                                  //Vai de 0 a 5
       int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 4) ){
-        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
-        hide_pieces(board, tipo, i, j, 1);                                //Escode joias a descer
-        *i_fall = i-2;                                                    //Ponteiro da queda
-        return 1; } }
+      if ( matchpoint_verify(board, tipo, i, j, 4) ){                 //Se marcou ponto
+        if ( board[i][j].type < 5){                                   //Se não for especial
+          board[i][j].type += 5;                                      //Transforma em especial
+          board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
+        }
+        hide_pieces(board, tipo, i, j, 1);                            //Escode joias a descer
+        quant += 5; } }
 
   //Verifica l invertido
-  for (int i=3; i<BOARD_N+1 ;i++)                                         //Vai de 3 a 8
-    for (int j=2; j<BOARD_N ;j++){                                        //Vai de 2 a 7
+  for (int i=3; i<BOARD_N+1 ;i++)                                     //Vai de 3 a 8
+    for (int j=2; j<BOARD_N ;j++){                                    //Vai de 2 a 7
       int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 5) ){
-        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
-        hide_pieces(board, tipo, i, j, 2);                                //Esconde joias a descer
-        *i_fall = i-2;                                                    //Ponteiro da queda
-        return 1; } }
+      if ( matchpoint_verify(board, tipo, i, j, 5) ){                 //Se marcou ponto
+        if ( board[i][j].type < 5){                                   //Se não for especial
+          board[i][j].type += 5;                                      //Transforma em especial
+          board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
+        }
+        hide_pieces(board, tipo, i, j, 2);                            //Esconde joias a descer
+        quant += 5; } }
 
   //Verifica l de ponta-cabeça
-  for (int i=1; i<BOARD_N-1 ;i++)                                         //Vai de 1 a 6
-    for (int j=0; j<BOARD_N-2 ;j++){                                      //Vai de 0 a 5
+  for (int i=1; i<BOARD_N-1 ;i++)                                     //Vai de 1 a 6
+    for (int j=0; j<BOARD_N-2 ;j++){                                  //Vai de 0 a 5
       int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 6) ){
-        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
-        hide_pieces(board, tipo, i, j, 3);                                //Esconde joias a descer
-        *i_fall = i;                                                      //Ponteiro da queda
-        return 1; } }
+      if ( matchpoint_verify(board, tipo, i, j, 6) ){                 //Se marcou ponto
+        if ( board[i][j].type < 5){                                   //Se não for especial
+          board[i][j].type += 5;                                      //Transforma em especial
+          board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
+        }
+        hide_pieces(board, tipo, i, j, 3);                            //Esconde joias a descer
+        quant += 5; } }
 
   //Verifica l invertido e de ponta-cabeça
-  for (int i=1; i<BOARD_N-1 ;i++)                                         //Vai de 1 a 6
-    for (int j=2; j<BOARD_N ;j++){                                        //Vai de 2 a 7
+  for (int i=1; i<BOARD_N-1 ;i++)                                     //Vai de 1 a 6
+    for (int j=2; j<BOARD_N ;j++){                                    //Vai de 2 a 7
       int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 7) ){
-        if ( board[i][j].type < 5)    board[i][j].type += 5;              //Joia especial
-        hide_pieces(board, tipo, i, j, 4);                                //Esconde joias a descer
-        *i_fall = i;                                                      //Ponteiro da queda
-        return 1; } }
+      if ( matchpoint_verify(board, tipo, i, j, 7) ){                 //Se marcou ponto
+        if ( board[i][j].type < 5){                                   //Se não for especial
+          board[i][j].type += 5;                                      //Transforma em especial
+          board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
+        }
+        hide_pieces(board, tipo, i, j, 4);                            //Esconde joias a descer
+        quant += 5; } }
 
-  return 0;
+  return quant;
 }
 
+//Verifica matchpoint em T
+//Retorna numero de joias marcadas
 int T_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall);
+  int quant = 0;
 
   //Verifica T em pe
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=1; j<BOARD_N-1; j++){
       int tipo = board[i][j].type;
-      if ( matchpoint_verify(board, tipo, i, j, 8) ){
-        if ( board[i][j].type < 5 ) board[i][j].type += 5;
-        hide_pieces(board, tipo, i, j, 5);
-        *i_fall = i;
-      return 1; } }
+      if ( matchpoint_verify(board, tipo, i, j, 8) ){                 //Se marcou ponto
+        if ( board[i][j].type < 5 ){                                  //Se nao for especial  
+          board[i][j].type += 5;                                      //Transforma em especial
+          board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
+        }
+        hide_pieces(board, tipo, i, j, 5);                            //Esconde joias
+        quant += 5; } }
 
   //Verifica T de ponta cabeca
   for (int i=3; i<BOARD_N+1 ;i++)
     for (int j=1; j<BOARD_N-1; j++){
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 9) ){
-        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        if ( board[i][j].type < 5 ){
+          board[i][j].type += 5;
+          board[i][j].special_gen_flag = 1;
+        }
         hide_pieces(board, tipo, i, j, 6);
-        *i_fall = i;
-      return 1; } }
+        quant += 5; } }
 
   //Verifica T deitado para esquerda
   for (int i=2; i<BOARD_N ;i++)
     for (int j=0; j<BOARD_N-2; j++){
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 10) ){
-        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        if ( board[i][j].type < 5 ){
+          board[i][j].type += 5;
+          board[i][j].special_gen_flag = 1;
+        }
         hide_pieces(board, tipo, i, j, 7);
-        *i_fall = i-1;
-      return 1; } }
+        quant += 5; } }
 
   //Verifica T deitado para direita
   for (int i=2; i<BOARD_N ;i++)
     for (int j=2; j<BOARD_N; j++){
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 11) ){
-        if ( board[i][j].type < 5 ) board[i][j].type += 5;
+        if ( board[i][j].type < 5 ){
+          board[i][j].type += 5;
+          board[i][j].special_gen_flag = 1;
+        }
         hide_pieces(board, tipo, i, j, 8);
-        *i_fall = i-1;
-      return 1; } }
+        quant += 5; } }
 
-  return 0;
+  return quant;
 }
 
 int star_test(JEWEL **board, STATES *global_state){
-  int *i_fall = &(global_state->i_jewel_fall);
+  int quant = 0;
 
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=1; j<BOARD_N-1 ;j++){
       int tipo = board[i][j].type;
       if ( board[i+1][j-1].type == tipo && board[i+1][j].type == tipo &&
            board[i+1][j+1].type == tipo && board[i+2][j].type == tipo ){
-        *i_fall = i;
         board[i][j].draw = 0;
         board[i+1][j-1].draw = 0;  board[i+1][j].draw = 0;
         board[i+1][j+1].draw = 0;  board[i+2][j].draw = 0;
-        return 1; } }
+        quant += 5; } }
 
-  return 0;
+  return quant;
 }
-
 
 void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
   int *i_clk = &(mouse->i_clk), *j_clk = &(mouse->j_clk);   //Coordenadas board click
@@ -892,26 +914,26 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
        //Testa movimentacao minima
        if ( h_delta >= JEWEL_SIZE-18 || v_delta >= JEWEL_SIZE-18 ) {
          //Calcula coordenadas do doce clicado e solto na matriz
-         *i_clk = (mouse->y_clk - Y_OFFSET + JEWEL_SIZE)/JEWEL_SIZE;    //Linha da joia clicada
-         *j_clk = (mouse->x_clk - X_OFFSET)/JEWEL_SIZE;                 //Coluna da joia clicada
-         *i_rls = (mouse->y_rls - Y_OFFSET + JEWEL_SIZE)/JEWEL_SIZE;    //Linha da joia solta
-         *j_rls = (mouse->x_rls - X_OFFSET)/JEWEL_SIZE;                 //Coluna da joia solta
+         *i_clk = (mouse->y_clk - Y_OFFSET + JEWEL_SIZE)/JEWEL_SIZE;  //Linha da joia clicada
+         *j_clk = (mouse->x_clk - X_OFFSET)/JEWEL_SIZE;               //Coluna da joia clicada
+         *i_rls = (mouse->y_rls - Y_OFFSET + JEWEL_SIZE)/JEWEL_SIZE;  //Linha da joia solta
+         *j_rls = (mouse->x_rls - X_OFFSET)/JEWEL_SIZE;               //Coluna da joia solta
 
          //Se variação horizontal maior que vertical
          if ( h_delta > v_delta ){  *i_rls = *i_clk;
-           if ( horizontal > 0 ) *j_rls = *j_clk + 1;          //Movimenta direita
-           else                  *j_rls = *j_clk - 1;          //Movimenta esquerda
-         } else {  *j_rls = *j_clk;
-           if ( vertical > 0 )   *i_rls = *i_clk + 1;          //Movimenta baixo
-           else                  *i_rls = *i_clk - 1;          //Movimenta cima
+           if ( horizontal > 0 )    *j_rls = *j_clk + 1;              //Movimenta direita
+           else                     *j_rls = *j_clk - 1;              //Movimenta esquerda
+         } else {                   *j_rls = *j_clk;
+           if ( vertical > 0 )      *i_rls = *i_clk + 1;              //Movimenta baixo
+           else                     *i_rls = *i_clk - 1;              //Movimenta cima
          }
 
          //Correção de bug
          if ( *i_rls < BOARD_N+1 && *j_rls < BOARD_N ) {
-           *x_jewel_clk = board[*i_clk][*j_clk].x;       //Salva as coordenadas da troca
-           *y_jewel_clk = board[*i_clk][*j_clk].y;       //Salva as coordenadas da troca
-           *x_jewel_rls = board[*i_rls][*j_rls].x;       //Salva as coordenadas da troca
-           *y_jewel_rls = board[*i_rls][*j_rls].y;       //Salva as coordenadas da troca
+           *x_jewel_clk = board[*i_clk][*j_clk].x;                    //Salva as coordenadas da troca
+           *y_jewel_clk = board[*i_clk][*j_clk].y;                    //Salva as coordenadas da troca
+           *x_jewel_rls = board[*i_rls][*j_rls].x;                    //Salva as coordenadas da troca
+           *y_jewel_rls = board[*i_rls][*j_rls].y;                    //Salva as coordenadas da troca
            global_state->board_state = BOARD_SWITCH_JEWEL;
          } } }
 
@@ -921,9 +943,9 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
 void imprime_board(JEWEL **board){
 
   for (int i=0; i<BOARD_N+1 ;i++){
-    for (int j=0; j<BOARD_N ;j++){
+    for (int j=0; j<BOARD_N ;j++)
       printf("[%d][%d] ", i, j);
-    }
+
     printf("\n");
     for (int j=0; j<BOARD_N ;j++){
       if ( board[i][j].type == 0 )
@@ -960,36 +982,26 @@ void imprime_board(JEWEL **board){
 int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
   int *i_fall = &(global_state->i_jewel_fall);
   int *fall_flag = &(global_state->fall_flag);
+  int jewel_quant = 0;
 
   switch ( global_state->fall_state ){
-
     case TEST_FALL:
-      imprime_board(board);
-      if ( T_test(board, global_state) || L_test(board, global_state) || star_test(board, global_state) ) {
-        game_score->score += 500;
-        snprintf(game_score->str_score, 20, "%d", game_score->score);
+      //Bateria de testes
+      jewel_quant += T_test(board, global_state);
+      jewel_quant += L_test(board, global_state);
+      jewel_quant += star_test(board, global_state);
+      jewel_quant += horizontal_test(board, global_state);
+      jewel_quant += vertical_test(board, global_state);
+
+      //Se marcou pontuacao, muda pra fall_board
+      if ( jewel_quant ){
         global_state->fall_state = RENDER_FALL;
-        *fall_flag = 1;
+      //  game_score->score += 500;
+      //  snprintf(game_score->str_score, 20, "%d", game_score->score);
+        *fall_flag = 1; *i_fall = 1;
         return 1;
-      } else {
-        int jewel_number = horizontal_test(board, global_state);
-        if ( jewel_number ){
-          game_score->score += 100 * jewel_number;
-          snprintf(game_score->str_score, 20, "%d", game_score->score);
-          global_state->fall_state = RENDER_FALL;
-          *fall_flag = 1;
-          return 1;
-        } else {
-          jewel_number = vertical_test(board, global_state);
-          if ( jewel_number ){
-            game_score->score += 100 * jewel_number;
-            snprintf(game_score->str_score, 20, "%d", game_score->score);
-            global_state->fall_state = RENDER_FALL;
-            *fall_flag = 1;
-            return 1;
-          }  else
-            global_state->board_state = BOARD_NEW_PLAY;   //Nao ha mais matchpoints
-        } }
+      } else
+        global_state->board_state = BOARD_NEW_PLAY;
     return 0;
     
     //Renderiza joias caindo na linha *i_fall
@@ -1059,8 +1071,10 @@ void board_draw(JEWEL **board, ALLEGRO_BITMAP **candy_sprite){
 
   for(int i=0; i<BOARD_N+1 ;i++)    //Ignora a primeira fileira de peças
     for(int j=0; j<BOARD_N ;j++)
-      if ( board[i][j].draw )
+      if ( board[i][j].draw ){
         al_draw_bitmap(candy_sprite[board[i][j].type], board[i][j].x, board[i][j].y, 0);
+        board[i][j].special_gen_flag = 0;
+      }
 }
 
 
