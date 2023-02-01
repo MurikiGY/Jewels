@@ -544,78 +544,78 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
     break;
       
     case 2:                                                                         //Caso horizontal
-      if (( board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
-          ( board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N))
+      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N ) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+2].type) == 2*JEWEL_TYPE_N ))
         return 1;
     break;
 
     case 3:                                                                         //Caso vertical
-      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N ) &&     //Testa joias a baixo
-          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N )) 
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+2][j].type) == 2*JEWEL_TYPE_N)) 
         return 1;
     break;
 
     case 4:   //Caso L
-      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
-          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N))
+      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-2][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+2].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 5:   //Caso L contrario
-      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
-          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N) &&
-          (board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
-          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N))
+      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-2][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-2].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 6:   //Caso L de ponta-cabeca
-      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N) &&
-          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N))
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+2][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+2].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 7:   //Caso L contrario de ponta-cabeca
-      if ((board[i+1][j].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N) &&
-          (board[i+2][j].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N) &&
-          (board[i][j-1].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N) &&
-          (board[i][j-2].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N))
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+2][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-2].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 8:   //Caso T
-      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
-          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N) &&
-          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N))
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+2][j].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 9:   //Caso T de ponta-cabeca
-      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
-          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
-          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N))
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-2][j].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 10:  //Caso T deitado esquerda
-      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N) &&
-          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
-          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N))
+      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+2].type) == 2*JEWEL_TYPE_N) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
 
     case 11:  //Caso T deitado Direita
-      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
-          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N) &&
-          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
-          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N))
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-1].type) == 2*JEWEL_TYPE_N) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j-2].type) == 2*JEWEL_TYPE_N) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i-1][j].type) == 2*JEWEL_TYPE_N) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N))
         return 1;
     break;
   }
@@ -751,9 +751,7 @@ int horizontal_test(JEWEL **board, STATES *global_state){
             board[i][j+2].special_gen_flag = 1;
           }
           quant += k-j;
-        } 
-      }
-    }
+        }}}
 
   return quant;
 }
@@ -785,9 +783,7 @@ int vertical_test(JEWEL **board, STATES *global_state){
             board[i+2][j].special_gen_flag = 1;
           }
           quant += k-i;
-        }
-      }
-    }
+        }}}
 
   return quant;
 }
@@ -802,8 +798,8 @@ int L_test(JEWEL **board, STATES *global_state){
     for (int j=0; j<BOARD_N-2 ;j++){                                  //Vai de 0 a 5
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 4) ){                 //Se marcou ponto
-        if ( board[i][j].type < JEWEL_TYPE_N){                                   //Se não for especial
-          board[i][j].type += JEWEL_TYPE_N;                                      //Transforma em especial
+        if ( board[i][j].type < JEWEL_TYPE_N){                        //Se não for especial
+          board[i][j].type += JEWEL_TYPE_N;                           //Transforma em especial
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(board, tipo, i, j, 1);                            //Escode joias a descer
@@ -814,8 +810,8 @@ int L_test(JEWEL **board, STATES *global_state){
     for (int j=2; j<BOARD_N ;j++){                                    //Vai de 2 a 7
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 5) ){                 //Se marcou ponto
-        if ( board[i][j].type < JEWEL_TYPE_N){                                   //Se não for especial
-          board[i][j].type += JEWEL_TYPE_N;                                      //Transforma em especial
+        if ( board[i][j].type < JEWEL_TYPE_N){                        //Se não for especial
+          board[i][j].type += JEWEL_TYPE_N;                           //Transforma em especial
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(board, tipo, i, j, 2);                            //Esconde joias a descer
@@ -826,8 +822,8 @@ int L_test(JEWEL **board, STATES *global_state){
     for (int j=0; j<BOARD_N-2 ;j++){                                  //Vai de 0 a 5
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 6) ){                 //Se marcou ponto
-        if ( board[i][j].type < JEWEL_TYPE_N){                                   //Se não for especial
-          board[i][j].type += JEWEL_TYPE_N;                                      //Transforma em especial
+        if ( board[i][j].type < JEWEL_TYPE_N){                        //Se não for especial
+          board[i][j].type += JEWEL_TYPE_N;                           //Transforma em especial
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(board, tipo, i, j, 3);                            //Esconde joias a descer
@@ -838,8 +834,8 @@ int L_test(JEWEL **board, STATES *global_state){
     for (int j=2; j<BOARD_N ;j++){                                    //Vai de 2 a 7
       int tipo = board[i][j].type;
       if ( matchpoint_verify(board, tipo, i, j, 7) ){                 //Se marcou ponto
-        if ( board[i][j].type < JEWEL_TYPE_N){                                   //Se não for especial
-          board[i][j].type += JEWEL_TYPE_N;                                      //Transforma em especial
+        if ( board[i][j].type < JEWEL_TYPE_N){                        //Se não for especial
+          board[i][j].type += JEWEL_TYPE_N;                           //Transforma em especial
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(board, tipo, i, j, 4);                            //Esconde joias a descer
