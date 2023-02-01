@@ -1,3 +1,5 @@
+# Fonte de sprites: https://www.pngfind.com/download/TihJhmR_mega-man-yoku-blocks-hd-png-download/
+
 # Board ta dando merda, descobrir o porque da falha de segmentação.
   - Corrigido, tinha colocado uma variavel de allegro_bitmap para cada posição da matriz, alterei para um vetor de sprites.
 

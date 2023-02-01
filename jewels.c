@@ -366,16 +366,21 @@ typedef struct jewel {
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
   //Inicia vetor de sprites
-  candy_sprite[0] = al_load_bitmap("resources/candy/candy1.png");   //Ponteiro de sprite 0
-  candy_sprite[1] = al_load_bitmap("resources/candy/candy2.png");   //Ponteiro de sprite 1
-  candy_sprite[2] = al_load_bitmap("resources/candy/candy3.png");   //Ponteiro de sprite 2
-  candy_sprite[3] = al_load_bitmap("resources/candy/candy4.png");   //Ponteiro de sprite 3
-  candy_sprite[4] = al_load_bitmap("resources/candy/candy5.png");   //Ponteiro de sprite 4
-  candy_sprite[5] = al_load_bitmap("resources/candy/special_candy1.png");   //Ponteiro de sprite 4
-  candy_sprite[6] = al_load_bitmap("resources/candy/special_candy2.png");   //Ponteiro de sprite 4
-  candy_sprite[7] = al_load_bitmap("resources/candy/special_candy3.png");   //Ponteiro de sprite 4
-  candy_sprite[8] = al_load_bitmap("resources/candy/special_candy4.png");   //Ponteiro de sprite 4
-  candy_sprite[9] = al_load_bitmap("resources/candy/special_candy5.png");   //Ponteiro de sprite 4
+  candy_sprite[0] = al_load_bitmap("resources/sprites/rocks/rock1.png");   
+  candy_sprite[1] = al_load_bitmap("resources/sprites/rocks/rock2.png");   
+  candy_sprite[2] = al_load_bitmap("resources/sprites/rocks/rock3.png");   
+  candy_sprite[3] = al_load_bitmap("resources/sprites/rocks/rock4.png");   
+  candy_sprite[4] = al_load_bitmap("resources/sprites/rocks/rock5.png");   
+  candy_sprite[5] = al_load_bitmap("resources/sprites/rocks/special11.png");
+  candy_sprite[6] = al_load_bitmap("resources/sprites/rocks/special12.png");
+  candy_sprite[7] = al_load_bitmap("resources/sprites/rocks/special13.png");
+  candy_sprite[8] = al_load_bitmap("resources/sprites/rocks/special14.png");
+  candy_sprite[9] = al_load_bitmap("resources/sprites/rocks/special15.png");
+  candy_sprite[10] = al_load_bitmap("resources/sprites/rocks/special11.png");
+  candy_sprite[11] = al_load_bitmap("resources/sprites/rocks/special12.png");
+  candy_sprite[12] = al_load_bitmap("resources/sprites/rocks/special13.png");
+  candy_sprite[13] = al_load_bitmap("resources/sprites/rocks/special14.png");
+  candy_sprite[14] = al_load_bitmap("resources/sprites/rocks/special15.png");
 
   JEWEL **board;  //Altura BOARD_N+1 e comprimento BOARD_N
   board = malloc( sizeof(JEWEL *) * (BOARD_N+1) );            //Vetor de ponteiros
@@ -983,7 +988,7 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
 
   switch ( global_state->fall_state ){
     case TEST_FALL:
-      imprime_board(board);
+      //imprime_board(board);
       //Bateria de testes
       jewel_quant += T_test(board, global_state);
       jewel_quant += L_test(board, global_state);
@@ -1107,7 +1112,7 @@ int main(){
   stars_init(stars);
   SCORE *game_score;                                      //Variavel de score
   game_score = score_init();
-  JEWEL **board; ALLEGRO_BITMAP *candy_sprite[10];         //Variavel do tabuleiro e vetor de sprites
+  JEWEL **board; ALLEGRO_BITMAP *candy_sprite[18];         //Variavel do tabuleiro e vetor de sprites
   board = board_init(candy_sprite);
   STATES global_state;                                    //Variavel de maquina de estados
   state_init(&global_state);
