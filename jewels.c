@@ -360,27 +360,30 @@ typedef struct jewel {
 #define Y_OFFSET      140            //Espaçamento do score
 #define JEWEL_SIZE    70             //Tamanho ocupado pelo doce
 #define BOARD_N       8              //Tamanho da matriz
-#define JEWEL_TYPE_N  5              //Tipos diferentes de doces
+#define JEWEL_TYPE_N  6              //Tipos diferentes de doces
 #define FALL_SPEED 5
 
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
   //Inicia vetor de sprites
-  candy_sprite[0] = al_load_bitmap("resources/sprites/rocks/rock1.png");   
-  candy_sprite[1] = al_load_bitmap("resources/sprites/rocks/rock2.png");   
-  candy_sprite[2] = al_load_bitmap("resources/sprites/rocks/rock3.png");   
-  candy_sprite[3] = al_load_bitmap("resources/sprites/rocks/rock4.png");   
-  candy_sprite[4] = al_load_bitmap("resources/sprites/rocks/rock5.png");   
-  candy_sprite[5] = al_load_bitmap("resources/sprites/rocks/special11.png");
-  candy_sprite[6] = al_load_bitmap("resources/sprites/rocks/special12.png");
-  candy_sprite[7] = al_load_bitmap("resources/sprites/rocks/special13.png");
-  candy_sprite[8] = al_load_bitmap("resources/sprites/rocks/special14.png");
-  candy_sprite[9] = al_load_bitmap("resources/sprites/rocks/special15.png");
-  candy_sprite[10] = al_load_bitmap("resources/sprites/rocks/special11.png");
-  candy_sprite[11] = al_load_bitmap("resources/sprites/rocks/special12.png");
-  candy_sprite[12] = al_load_bitmap("resources/sprites/rocks/special13.png");
-  candy_sprite[13] = al_load_bitmap("resources/sprites/rocks/special14.png");
-  candy_sprite[14] = al_load_bitmap("resources/sprites/rocks/special15.png");
+  candy_sprite[0]  = al_load_bitmap("resources/sprites/rocks/rock1.png");   
+  candy_sprite[1]  = al_load_bitmap("resources/sprites/rocks/rock2.png");   
+  candy_sprite[2]  = al_load_bitmap("resources/sprites/rocks/rock3.png");   
+  candy_sprite[3]  = al_load_bitmap("resources/sprites/rocks/rock4.png");   
+  candy_sprite[4]  = al_load_bitmap("resources/sprites/rocks/rock5.png");   
+  candy_sprite[5]  = al_load_bitmap("resources/sprites/rocks/rock6.png");   
+  candy_sprite[6]  = al_load_bitmap("resources/sprites/rocks/special11.png");
+  candy_sprite[7]  = al_load_bitmap("resources/sprites/rocks/special12.png");
+  candy_sprite[8]  = al_load_bitmap("resources/sprites/rocks/special13.png");
+  candy_sprite[9]  = al_load_bitmap("resources/sprites/rocks/special14.png");
+  candy_sprite[10]  = al_load_bitmap("resources/sprites/rocks/special15.png");
+  candy_sprite[11]  = al_load_bitmap("resources/sprites/rocks/special16.png");
+  candy_sprite[12] = al_load_bitmap("resources/sprites/rocks/special21.png");
+  candy_sprite[13] = al_load_bitmap("resources/sprites/rocks/special22.png");
+  candy_sprite[14] = al_load_bitmap("resources/sprites/rocks/special23.png");
+  candy_sprite[15] = al_load_bitmap("resources/sprites/rocks/special24.png");
+  candy_sprite[16] = al_load_bitmap("resources/sprites/rocks/special25.png");
+  candy_sprite[17] = al_load_bitmap("resources/sprites/rocks/special26.png");
 
   JEWEL **board;  //Altura BOARD_N+1 e comprimento BOARD_N
   board = malloc( sizeof(JEWEL *) * (BOARD_N+1) );            //Vetor de ponteiros
@@ -400,10 +403,8 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
       board[i][j].y = Y_OFFSET + y_aux;
       board[i][j].type = between(0, JEWEL_TYPE_N);
       board[i][j].special_gen_flag = 0;
-      if ( i > 0 )
-        board[i][j].draw = 1;
-      else
-        board[i][j].draw = 0;
+      if ( i > 0 )  board[i][j].draw = 1;
+      else          board[i][j].draw = 0;
       x_aux += JEWEL_SIZE;
     }
     x_aux = 0;
@@ -416,7 +417,7 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite){
 
   //Destroi vetor de sprites
-  for (int i=0; i<5 ;i++)
+  for (int i=0; i<3*JEWEL_TYPE_N ;i++)
     al_destroy_bitmap(candy_sprite[i]);
 
   //Desaloca matriz
@@ -431,8 +432,8 @@ int board_check(JEWEL **board){
   for (int i=1; i<BOARD_N+1 ;i++)
     for (int j=0; j<BOARD_N-2 ;j++){
       int tipo = board[i][j].type;
-      if ( (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5 ) && //Testa joias a direita
-           (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5 ) )
+      if ( (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N ) && //Testa joias a direita
+           (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N ) )
         return 1;
     }
 
@@ -440,8 +441,8 @@ int board_check(JEWEL **board){
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=0; j<BOARD_N ;j++){
       int tipo = board[i][j].type;
-      if ( (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5 ) && //Testa joias a baixo
-           (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5 ) )
+      if ( (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N ) && //Testa joias a baixo
+           (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N ) )
         return 1;
     }
 
@@ -528,83 +529,85 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
 
   switch ( match_type ){
     case 1:                                                                         //Caso simples
-      if ( board[i][j].type == tipo || abs(tipo-board[i][j].type) == 5 )
+      if ( board[i][j].type == tipo                    ||
+           abs(tipo-board[i][j].type) == JEWEL_TYPE_N  ||
+           abs(tipo-board[i][j].type) == 2*JEWEL_TYPE_N )
         return 1;
     break;
       
     case 2:                                                                         //Caso horizontal
-      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&      //Testa joias a direita
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5))
+      if (( board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
+          ( board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 3:                                                                         //Caso vertical
-      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5 ) &&     //Testa joias a baixo
-          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5 )) 
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N ) &&     //Testa joias a baixo
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N )) 
         return 1;
     break;
 
     case 4:   //Caso L
-      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
-          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == 5) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5))
+      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 5:   //Caso L contrario
-      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
-          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == 5) &&
-          (board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
-          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == 5))
+      if ((board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N) &&
+          (board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 6:   //Caso L de ponta-cabeca
-      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5) &&
-          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5))
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 7:   //Caso L contrario de ponta-cabeca
-      if ((board[i+1][j].type == tipo || abs(tipo-board[i][j].type) == 5) &&
-          (board[i+2][j].type == tipo || abs(tipo-board[i][j].type) == 5) &&
-          (board[i][j-1].type == tipo || abs(tipo-board[i][j].type) == 5) &&
-          (board[i][j-2].type == tipo || abs(tipo-board[i][j].type) == 5))
+      if ((board[i+1][j].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N) &&
+          (board[i][j-1].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 8:   //Caso T
-      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
-          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5) &&
-          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == 5))
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N) &&
+          (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 9:   //Caso T de ponta-cabeca
-      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
-          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
-          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
-          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == 5))
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
+          (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
+          (board[i-2][j].type == tipo || abs(tipo-board[i-2][j].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 10:  //Caso T deitado esquerda
-      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == 5) &&
-          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == 5) &&
-          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
-          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5))
+      if ((board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N) &&
+          (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N))
         return 1;
     break;
 
     case 11:  //Caso T deitado Direita
-      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == 5) &&
-          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == 5) &&
-          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == 5) &&
-          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == 5))
+      if ((board[i][j-1].type == tipo || abs(tipo-board[i][j-1].type) == JEWEL_TYPE_N) &&
+          (board[i][j-2].type == tipo || abs(tipo-board[i][j-2].type) == JEWEL_TYPE_N) &&
+          (board[i-1][j].type == tipo || abs(tipo-board[i-1][j].type) == JEWEL_TYPE_N) &&
+          (board[i+1][j].type == tipo || abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N))
         return 1;
     break;
   }
@@ -726,8 +729,8 @@ int horizontal_test(JEWEL **board, STATES *global_state){
           int k = j+3;
           while ( k < BOARD_N && matchpoint_verify(board, tipo, i, k, 1) ) k++;         //Pega joias sequenciadas
           for (int aux=j; aux<k ;aux++)                                                 //Esconde doces sequenciados
-            //Se deve explodir especial
-            if ( board[i][aux].type < 5 )
+            //Se for comum
+            if ( board[i][aux].type < JEWEL_TYPE_N )
               board[i][aux].draw = 0;
             else
               if ( board[i][aux].special_gen_flag == 0 )
@@ -735,7 +738,7 @@ int horizontal_test(JEWEL **board, STATES *global_state){
 
           //Gera joia especial
           if ( k-j == 5 ){
-            board[i][j+2].type += 5;
+            board[i][j+2].type += 2*JEWEL_TYPE_N;
             board[i][j+2].draw = 1;
             board[i][j+2].special_gen_flag = 1;
           }
@@ -761,7 +764,7 @@ int vertical_test(JEWEL **board, STATES *global_state){
           while ( k < BOARD_N+1 && matchpoint_verify(board, tipo, k, j, 1) ) k++;       //Pega joias sequenciadas
           for (int aux=i; aux<k ;aux++)                                                 //Esconde doces sequenciados
             //Se for especial nao gerado recentemente
-            if ( board[aux][j].type < 5 )
+            if ( board[aux][j].type < JEWEL_TYPE_N )
               board[aux][j].draw = 0;
             else
               if ( board[aux][j].special_gen_flag == 0 )
@@ -769,7 +772,7 @@ int vertical_test(JEWEL **board, STATES *global_state){
 
           //Gera joia especial
           if ( k-i == 5 ){
-            board[i+2][j].type += 5;
+            board[i+2][j].type += 2*JEWEL_TYPE_N;
             board[i+2][j].draw = 1;
             board[i+2][j].special_gen_flag = 1;
           }
@@ -990,8 +993,8 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
     case TEST_FALL:
       //imprime_board(board);
       //Bateria de testes
-      jewel_quant += T_test(board, global_state);
-      jewel_quant += L_test(board, global_state);
+      //jewel_quant += T_test(board, global_state);
+      //jewel_quant += L_test(board, global_state);
       jewel_quant += horizontal_test(board, global_state);
       jewel_quant += vertical_test(board, global_state);
 
@@ -1033,13 +1036,11 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
               board[i][j].y += FALL_SPEED; if ( board[0][j].y > 100 ) board[0][j].draw = 1;
             } } } }
 
-
       //Se não houve joia para renderizar, ou terminou de renderizar
       if ( *fall_flag == 1 ){
         (*i_fall)++;
         if ( *i_fall > BOARD_N )
-          global_state->fall_state = TEST_FALL;
-      }
+          global_state->fall_state = TEST_FALL; }
     break;
   }
   return 1;
