@@ -81,7 +81,11 @@
 # Alterar renderização
   - Esconde todas as peças do jogo e depois renderiza
 
-
+# A fazer:
+  - Score persistente
+  - Som de matchpoint
+  - Menu
+  - Help Page
 
 
 
