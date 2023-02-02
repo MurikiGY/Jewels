@@ -113,7 +113,7 @@ void audio_init(ALLEGRO_AUDIO_STREAM **bg_music){
   al_init_acodec_addon();
   al_reserve_samples(128);
 
-  *bg_music = al_load_audio_stream("resources/sound/music.opus", 2, 2048);
+  *bg_music = al_load_audio_stream("resources/sound/Haggstrom.ogx", 2, 2048);
   must_init(*bg_music, "Background music");
   
   al_set_audio_stream_playmode(*bg_music, ALLEGRO_PLAYMODE_LOOP);
@@ -301,8 +301,9 @@ void score_deinit(SCORE *game_score){
 
 void score_draw (SCORE *game_score, ALLEGRO_FONT *font){
 
-  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE       RECORD");
-  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 90, 0, game_score->str_score);
+  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE");
+  al_draw_text(font, al_map_rgb(255, 255, 255), 400, 30, 0, "RECORD");
+  al_draw_text(font, al_map_rgb(255, 255, 255), 200, 90, 0, game_score->str_score);
 }
 
 // --- Maquina de estados ---
@@ -447,7 +448,7 @@ int board_check(JEWEL **board){
       int tipo = board[i][j].type;
       if ( (board[i+1][j].type == tipo                     || 
             abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N   ||
-            abs(tipo-board[i+1][j].type) == JEWEL_TYPE_N   ) && //Testa joias a baixo
+            abs(tipo-board[i+1][j].type) == 2*JEWEL_TYPE_N   ) && //Testa joias a baixo
            (board[i+2][j].type == tipo                     || 
             abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N   ||
             abs(tipo-board[i+2][j].type) == 2*JEWEL_TYPE_N ) )
@@ -991,7 +992,7 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
 
   switch ( global_state->fall_state ){
     case TEST_FALL:
-      imprime_board(board);
+      //imprime_board(board);
       //Bateria de testes
       jewel_quant += T_test(board, global_state);
       jewel_quant += L_test(board, global_state);
