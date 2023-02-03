@@ -113,7 +113,7 @@ void audio_init(ALLEGRO_AUDIO_STREAM **bg_music){
   al_init_acodec_addon();
   al_reserve_samples(128);
 
-  *bg_music = al_load_audio_stream("resources/sound/Haggstrom.ogx", 2, 2048);
+  *bg_music = al_load_audio_stream("resources/sound/Haggstrom.opus", 2, 2048);
   must_init(*bg_music, "Background music");
   
   al_set_audio_stream_playmode(*bg_music, ALLEGRO_PLAYMODE_LOOP);
@@ -284,26 +284,58 @@ SCORE *score_init(){
   SCORE *game_score = malloc( sizeof(SCORE) );
   must_init(game_score, "Score");
 
+  //Inicia score normal
   game_score->score = 0;
-  strcpy(game_score->str_score, "0");
-  game_score->global_score = 0;
-  strcpy(game_score->str_global_score, "0");
-  game_score->x_score = 160; game_score->y_score = 70;
-  game_score->x_global = 370; game_score->y_global = 70;
+  snprintf(game_score->str_score, 20, "%d", game_score->score);
+
+  //Inicia global score
+  FILE *filename = fopen("resources/score/score_history.txt", "r");
+  must_init(filename, "Global Score");
+  int g_score = 0;
+  int score_max = 0;
+  while ( fscanf(filename, "%d", &g_score) != EOF )
+    if ( g_score > score_max )
+      score_max = g_score;
+
+  game_score->global_score = score_max;
+  snprintf(game_score->str_global_score, 20, "%d", game_score->global_score);
+  fclose(filename);
+
+  //Posição do score
+  game_score->x_score = 190; game_score->y_score = 30;
+  game_score->x_global = 400; game_score->y_global = 30;
 
   return game_score;
 }
 
 void score_deinit(SCORE *game_score){
+  FILE *filename = fopen("resources/score/score.txt", "a");
+  must_init(filename, "Save game score");
 
+  fprintf(filename, "%d\n", game_score->score);
+
+  fclose(filename);
   free(game_score);
 }
 
 void score_draw (SCORE *game_score, ALLEGRO_FONT *font){
 
-  al_draw_text(font, al_map_rgb(255, 255, 255), 190, 30, 0, "SCORE");
-  al_draw_text(font, al_map_rgb(255, 255, 255), 400, 30, 0, "RECORD");
-  al_draw_text(font, al_map_rgb(255, 255, 255), 200, 90, 0, game_score->str_score);
+  al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_score, game_score->y_score, 0, "SCORE");
+  al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_global, game_score->y_global, 0, "RECORD");
+
+  if ( game_score->score < 1000 )
+    al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_score+20, game_score->y_score+60, 0, game_score->str_score);
+  else if ( game_score->score < 10000 )
+    al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_score+15, game_score->y_score+60, 0, game_score->str_score);
+  else
+    al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_score+11, game_score->y_score+60, 0, game_score->str_score);
+
+  if ( game_score->score < 1000 )
+    al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_global+23, game_score->y_global+60, 0, game_score->str_global_score);
+  else if ( game_score->score < 10000 )
+    al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_global+18, game_score->y_global+60, 0, game_score->str_global_score);
+  else
+    al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_global+11, game_score->y_global+60, 0, game_score->str_global_score);
 }
 
 // --- Maquina de estados ---
@@ -627,7 +659,7 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
 void hide_special_explosion(JEWEL **board, int i, int j){
   
   //Se explosao circular
-  if ( board[i][j].type >= JEWEL_TYPE_N && board[i][j].type <= 2*JEWEL_TYPE_N ){
+  if ( board[i][j].type >= JEWEL_TYPE_N && board[i][j].type < 2*JEWEL_TYPE_N ){	//Se tipo > 5 e < 12
     //Remove tipo especial para não backtraking infinito
     board[i][j].type -= JEWEL_TYPE_N;
 
@@ -641,7 +673,8 @@ void hide_special_explosion(JEWEL **board, int i, int j){
         board[a][b].draw = 0;
         if ( board[a][b].type > 4 && board[a][b].type < 10 )
           hide_special_explosion(board, a, b);}
-  } else if ( board[i][j].type >= JEWEL_TYPE_N ) {  //Explosao em cruz
+
+  } else if ( board[i][j].type >= 2*JEWEL_TYPE_N ) {  //Explosao em cruz
     //remove tipo especial
     board[i][j].type -= 2*JEWEL_TYPE_N;
 
@@ -743,6 +776,7 @@ void hide_pieces(JEWEL **board, int tipo, int i, int j, int match_type){
 }
 
 //Verifica matchpoint na horizontal
+//Retorna numero de peças destruidas
 int horizontal_test(JEWEL **board, STATES *global_state){
   int quant = 0;
 
@@ -774,7 +808,7 @@ int horizontal_test(JEWEL **board, STATES *global_state){
 }
 
 //Verifica matchpoint na vertical
-//Retorna numero de joias marcadas
+//Retorna numero de peças destruidas
 int vertical_test(JEWEL **board, STATES *global_state){
   int quant = 0;
 
@@ -992,7 +1026,6 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
 
   switch ( global_state->fall_state ){
     case TEST_FALL:
-      //imprime_board(board);
       //Bateria de testes
       jewel_quant += T_test(board, global_state);
       jewel_quant += L_test(board, global_state);
@@ -1111,7 +1144,7 @@ int main(){
   ALLEGRO_AUDIO_STREAM *bg_music;                         //Variaveis de audio
   audio_init(&bg_music);
 
-  //Variaveis de funcionamento
+  //Variaveis de tema do jogo
   ALLEGRO_BITMAP *background;                             //Variavel de background
   background_init(&background);
   STAR stars[STARS_N];                                    //Variavel de estrelas de fundo
