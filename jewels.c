@@ -289,7 +289,7 @@ SCORE *score_init(){
   snprintf(game_score->str_score, 20, "%d", game_score->score);
 
   //Inicia global score
-  FILE *filename = fopen("resources/score/score_history.txt", "r");
+  FILE *filename = fopen("resources/score/score_history.txt", "a+");
   must_init(filename, "Global Score");
   int g_score = 0;
   int score_max = 0;
@@ -309,7 +309,7 @@ SCORE *score_init(){
 }
 
 void score_deinit(SCORE *game_score){
-  FILE *filename = fopen("resources/score/score.txt", "a");
+  FILE *filename = fopen("resources/score/score_history.txt", "a");
   must_init(filename, "Save game score");
 
   fprintf(filename, "%d\n", game_score->score);
@@ -607,7 +607,7 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
           (board[i+2][j].type == tipo || abs(tipo-board[i+2][j].type) == JEWEL_TYPE_N || abs(tipo-board[i+2][j].type) == 2*JEWEL_TYPE_N) &&
           (board[i][j+1].type == tipo || abs(tipo-board[i][j+1].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+1].type) == 2*JEWEL_TYPE_N) &&
           (board[i][j+2].type == tipo || abs(tipo-board[i][j+2].type) == JEWEL_TYPE_N || abs(tipo-board[i][j+2].type) == 2*JEWEL_TYPE_N))
-        return 1;
+	      return 1;
     break;
 
     case 7:   //Caso L contrario de ponta-cabeca
@@ -777,12 +777,13 @@ void hide_pieces(JEWEL **board, int tipo, int i, int j, int match_type){
 
 //Verifica matchpoint na horizontal
 //Retorna numero de peças destruidas
-int horizontal_test(JEWEL **board, STATES *global_state){
+int horizontal_test(JEWEL **board){
   int quant = 0;
 
   for (int i=1; i<BOARD_N+1 ;i++)
     for (int j=0; j<BOARD_N-2 ;j++){
       if ( board[i][j].draw ){
+
         int tipo = board[i][j].type;
         if ( matchpoint_verify(board, tipo, i, j, 2) ){                                 //Se marcou ponto
           int k = j+3;
@@ -809,12 +810,13 @@ int horizontal_test(JEWEL **board, STATES *global_state){
 
 //Verifica matchpoint na vertical
 //Retorna numero de peças destruidas
-int vertical_test(JEWEL **board, STATES *global_state){
+int vertical_test(JEWEL **board){
   int quant = 0;
 
   for (int i=1; i<BOARD_N-1 ;i++)
     for (int j=0; j<BOARD_N ;j++){
       if ( board[i][j].draw ){
+
         int tipo = board[i][j].type;
         if ( matchpoint_verify(board, tipo, i, j, 3) ){
           int k = i+3;
@@ -841,7 +843,7 @@ int vertical_test(JEWEL **board, STATES *global_state){
 
 //Verifica matchpoint de L em pe
 //Retorna quantas joias foram destruidas
-int L_test(JEWEL **board, STATES *global_state){
+int L_test(JEWEL **board){
   int quant = 0;
 
   //Verifica l normal
@@ -897,7 +899,7 @@ int L_test(JEWEL **board, STATES *global_state){
 
 //Verifica matchpoint em T
 //Retorna numero de joias marcadas
-int T_test(JEWEL **board, STATES *global_state){
+int T_test(JEWEL **board){
   int quant = 0;
 
   //Verifica T em pe
@@ -1016,6 +1018,42 @@ void imprime_board(JEWEL **board){
   return;
 }
 
+//testa se ainda existem possiveis jogadas
+//Retorna 1 em caso de game over
+int game_over(JEWEL **board){
+
+  //Testa submatriz do board
+  for (int i=1; i<BOARD_N; i++)        //i vai de 1 a 7
+    for (int j=0; j<BOARD_N-1 ;j++){   //j vai de 0 a 6
+      //Troca horizontal
+      switch_jewel_position(board, i, j, i, j+1);
+      if ( board_check(board) ){ switch_jewel_position(board, i, j, i, j+1); return 0; }
+      switch_jewel_position(board, i, j, i, j+1);
+      
+      //Troca vertical
+      switch_jewel_position(board, i, j, i+1, j);
+      if ( board_check(board) ){ switch_jewel_position(board, i, j, i+1, j); return 0; }
+      switch_jewel_position(board, i, j, i+1, j);
+    }
+  
+  //Testa coluna final
+  for (int i=1; i<BOARD_N ;i++){
+    switch_jewel_position(board, i, 7, i+1, 7);
+    if ( board_check(board) ){ switch_jewel_position(board, i, 7, i+1, 7); return 0; }
+    switch_jewel_position(board, i, 7, i+1, 7);
+  }
+  
+  //Testa linha final
+  for (int j=0; j<BOARD_N-1 ;j++){
+    switch_jewel_position(board, 8, j, 8, j+1);
+    if ( board_check(board) ){ switch_jewel_position(board, 8, j, 8, j+1); return 0; }
+    switch_jewel_position(board, 8, j, 8, j+1);
+  }
+
+  return 1;
+}
+
+
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario
@@ -1027,10 +1065,10 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
   switch ( global_state->fall_state ){
     case TEST_FALL:
       //Bateria de testes
-      jewel_quant += T_test(board, global_state);
-      jewel_quant += L_test(board, global_state);
-      jewel_quant += horizontal_test(board, global_state);
-      jewel_quant += vertical_test(board, global_state);
+      jewel_quant += T_test(board);
+      jewel_quant += L_test(board);
+      jewel_quant += horizontal_test(board);
+      jewel_quant += vertical_test(board);
 
       //Atualiza pontuacao
       game_score->score += 100 * jewel_quant;
@@ -1043,7 +1081,11 @@ int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score){
         *i_fall = 1;
         return 1;
       } else
-        global_state->board_state = BOARD_NEW_PLAY;
+	if ( game_over(board) ){
+	  printf("Game Over seu bosta\n");
+	  exit(1);
+	} else 
+	  global_state->board_state = BOARD_NEW_PLAY;
     return 0;
     
     //Renderiza joias caindo na linha *i_fall
