@@ -316,7 +316,8 @@ void score_deinit(SCORE *game_score){
   FILE *filename = fopen("resources/score/score_history.txt", "a");
   must_init(filename, "Save game score");
 
-  fprintf(filename, "%d\n", game_score->score);
+  if ( game_score->score > game_score->global_score )
+    fprintf(filename, "%d\n", game_score->score);
 
   fclose(filename);
   free(game_score);
@@ -344,18 +345,18 @@ void score_draw (SCORE *game_score, ALLEGRO_FONT *font){
 
 // --- Maquina de estados ---
 
-typedef enum state_board {
+typedef enum state_board {        //Estados do board
   BOARD_NEW_PLAY = 0,
   BOARD_SWITCH_JEWEL,
   BOARD_JEWEL_FALL
 } STATE_BOARD;
 
-typedef enum state_jewel {
+typedef enum state_jewel {        //Estados da troca de peças
   JEWEL_GO = 0,
   JEWEL_BACK
 } STATE_JEWEL;
 
-typedef enum state_fall {
+typedef enum state_fall {         //Estado da queda de peças
   TEST_FALL = 0,
   RENDER_FALL
 } STATE_FALL;
@@ -675,7 +676,7 @@ void hide_special_explosion(JEWEL **board, int i, int j){
     for (int a=i-1; a<a_end ;a++)
       for (int b=b_start; b<b_end  ;b++){
         board[a][b].draw = 0;
-        if ( board[a][b].type > 4 && board[a][b].type < 10 )
+        if ( board[a][b].type >= JEWEL_TYPE_N )  //Se tipo especial
           hide_special_explosion(board, a, b);}
 
   } else if ( board[i][j].type >= 2*JEWEL_TYPE_N ) {  //Explosao em cruz
@@ -686,15 +687,13 @@ void hide_special_explosion(JEWEL **board, int i, int j){
     for (int aux=0; aux<BOARD_N ;aux++){
       board[i][aux].draw = 0;
       if ( board[i][aux].type >= JEWEL_TYPE_N )
-        hide_special_explosion(board, i, aux);
-    }
+        hide_special_explosion(board, i, aux); }
     
     //Esconde vertical
     for (int aux=1; aux<BOARD_N+1 ;aux++){
       board[aux][j].draw = 0;
       if ( board[aux][j].type >= JEWEL_TYPE_N )
-        hide_special_explosion(board, aux, j);
-    }
+        hide_special_explosion(board, aux, j); }
   }
 }
 
@@ -1190,13 +1189,14 @@ int main(){
   MOUSE *mouse;                                           //Variavel de mouse
   mouse = mouse_init();
 
-  ALLEGRO_FONT *font;                                     //Variaveis de fonte
-  font_init(&font);
 
+  //Variaveis de tema do jogo
   ALLEGRO_AUDIO_STREAM *bg_music;                         //Variaveis de audio
   audio_init(&bg_music);
 
-  //Variaveis de tema do jogo
+  ALLEGRO_FONT *font;                                     //Variaveis de fonte
+  font_init(&font);
+
   ALLEGRO_BITMAP *background;                             //Variavel de background
   background_init(&background);
 
