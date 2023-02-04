@@ -1,6 +1,3 @@
-#ifndef _UTILS_
-#define _UTILS_
-
 #include <allegro5/display.h>
 #include <allegro5/bitmap.h>
 #include <allegro5/bitmap_draw.h>
@@ -14,15 +11,7 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_image.h>
-#include <stdbool.h>
 
-//Teste de inicialização
-void must_init(bool test, const char *description);
+#include "allegroEngine.h"
 
-//Inteiros aleatorios
-int between(int lo, int hi);
 
-//Float aleatorios
-float between_f(float lo, float hi);
-
-#endif

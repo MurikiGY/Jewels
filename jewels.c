@@ -88,12 +88,9 @@ void display_post_draw(ALLEGRO_BITMAP **buff, ALLEGRO_DISPLAY **disp){
 
 // --- FONTE ---
 
-//Inicializa fonte
+//Inicializa variavel de fonte
 void font_init(ALLEGRO_FONT **font){
   
-  al_init_font_addon();
-  al_init_ttf_addon();
-
   *font = al_load_font("resources/fonts/MASLITE.otf", 36, 0);
   must_init(*font, "Fonte MASLITE");
 }
@@ -108,18 +105,14 @@ void font_deinit(ALLEGRO_FONT **font){
 
 //Inicia variaveis de audio
 void audio_init(ALLEGRO_AUDIO_STREAM **bg_music){
-
-  al_install_audio();
-  al_init_acodec_addon();
-  al_reserve_samples(128);
-
   *bg_music = al_load_audio_stream("resources/sound/Haggstrom.opus", 2, 2048);
   must_init(*bg_music, "Background music");
-  
   al_set_audio_stream_playmode(*bg_music, ALLEGRO_PLAYMODE_LOOP);
   al_attach_audio_stream_to_mixer(*bg_music, al_get_default_mixer());
+
 }
 
+//Destroi variaveis de audio
 void audio_deinit(ALLEGRO_AUDIO_STREAM **bg_music){
 
   al_destroy_audio_stream(*bg_music);
@@ -263,6 +256,7 @@ void stars_update(STAR stars[]){
   }
 }
 
+//Renderiza estrelas
 void stars_draw(STAR stars[]){
 
   int star_x = 1;
@@ -283,6 +277,7 @@ typedef struct SCORE {
   int   x_global, y_global;
 } SCORE;
 
+//Inicia score
 SCORE *score_init(){
 
   SCORE *game_score = malloc( sizeof(SCORE) );
@@ -312,6 +307,7 @@ SCORE *score_init(){
   return game_score;
 }
 
+//Destroi score
 void score_deinit(SCORE *game_score){
   FILE *filename = fopen("resources/score/score_history.txt", "a");
   must_init(filename, "Save game score");
@@ -323,6 +319,7 @@ void score_deinit(SCORE *game_score){
   free(game_score);
 }
 
+//Renderiza score
 void score_draw (SCORE *game_score, ALLEGRO_FONT *font){
 
   al_draw_text(font, al_map_rgb(255, 255, 255), game_score->x_score, game_score->y_score, 0, "SCORE");
@@ -371,6 +368,7 @@ typedef struct states {
   int fall_flag;
 } STATES;
 
+//Inicia maquina de estados
 void state_init(STATES *global_states) {
 
   global_states->board_state  = BOARD_NEW_PLAY;
@@ -401,6 +399,8 @@ typedef struct jewel {
 #define JEWEL_TYPE_N  6              //Tipos diferentes de doces
 #define FALL_SPEED 5
 
+
+//Inicia board
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
 
   //Inicia vetor de sprites
@@ -452,6 +452,7 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   return board;
 }
 
+//Destroi board
 void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite){
 
   //Destroi vetor de sprites
@@ -1172,6 +1173,11 @@ int main(){
   must_init(al_init(), "allegro");                        //Allegro
   must_init(al_init_primitives_addon(), "primitives");    //Primitivas
   must_init(al_init_image_addon(), "image");              //Imagens
+  al_install_audio();
+  al_init_acodec_addon();
+  al_reserve_samples(128);
+  al_init_font_addon();
+  al_init_ttf_addon();
 
   //Variaveis de allegro engine
   ALLEGRO_TIMER* timer = al_create_timer(1.0 / FRAMES_N); //Variavel de tempo
@@ -1188,7 +1194,6 @@ int main(){
 
   MOUSE *mouse;                                           //Variavel de mouse
   mouse = mouse_init();
-
 
   //Variaveis de tema do jogo
   ALLEGRO_AUDIO_STREAM *bg_music;                         //Variaveis de audio
