@@ -5,11 +5,13 @@
 
 #include "allegroEngine.h"
 #include "utils.h"
+#include <allegro5/allegro_font.h>
 #include <allegro5/bitmap.h>
 
 // --- AUDIO ---
 typedef struct audio {
   ALLEGRO_AUDIO_STREAM    *bg_music;              //Musica de fundo
+  ALLEGRO_SAMPLE          *menu_button_effect;    //Efeito do botao 
   ALLEGRO_SAMPLE          *fall_snd_effect;       //Efeito da queda
   ALLEGRO_SAMPLE          *special1_snd_effect;   //Explosão do especial 1
   ALLEGRO_SAMPLE          *special2_snd_effect;   //Explosão do especial 2
@@ -31,14 +33,22 @@ typedef struct STAR {
   float y;
   float speed;
 } STAR;
-#define STARS_N ((BUFFER_W / 2) - 1)                //Numero de estrelas
+#define STARS_N ((BUFFER_W / 2) - 1)
 
 
 // --- SCORE ---
 typedef struct SCORE {
-  int   local_score;        char  str_score[20];          //Score
-  int   global_score; char  str_global_score[20];   //Global score
+  int   local_score;                //Score
+  int   global_score;               //Global score
 } SCORE;
+
+
+// --- MISSION/LEVEL ---
+typedef struct mission {
+  int type;                         //Type of the mission
+  int quant;                        //Quantity
+  int level;                        //Level
+} MISSION;
 
 
 // --- BOARD ---
@@ -48,8 +58,8 @@ typedef struct jewel {
   int   draw;                       //Booleano de renderizar
   int   special_gen_flag;           //Flag para saber se acabou de virar um especial
 } JEWEL;
-//Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
-//Board_y [-- 140 (score) -- : -- 560 (board) -- : -- 20 (offset) --]
+// Board_x [-- 80 (offset) -- : -- 560 (board) -- : -- 80 (offset) --]
+// Board_y [-- 140 (score) -- : -- 560 (board) -- : -- 20 (offset) --]
 //        [       70 (jewel) :                                      ]
 #define X_OFFSET      80            //Limites do tabuleiro
 #define Y_OFFSET      140           //Espaçamento do score
@@ -87,13 +97,14 @@ typedef struct states {
 } STATES;
 
 
-//Conjunto de Variaveis do jogo
+// Conjunto de Variaveis do jogo
 typedef struct engine_game {
   AUDIO_T                 *audio;                 //audios
   FONT_T                  *font;                  //Fonte
   ALLEGRO_BITMAP          *bg;                    //imagem de fundo
   STAR                    stars[STARS_N];         //Estrelas
   SCORE                   *score;                 //Pontuacao
+  MISSION                 *mission;               //Missão
   JEWEL                   **board;                //Tabuleiro 
   ALLEGRO_BITMAP          *piece_sprite[18];      //Sprites de peças
   STATES                  global_state;           //Variaveis de estado
@@ -101,58 +112,67 @@ typedef struct engine_game {
 
 
 // --- AUDIO ---
-//Inicia variaveis de audio
+// Inicia variaveis de audio
 void audio_init(AUDIO_T **audio);
-//Destroi variaveis de audio
+// Destroi variaveis de audio
 void audio_deinit(AUDIO_T **audio);
 
 
 // --- FONTE ---
-//Inicializa variavel de fonte
+// Inicializa variavel de fonte
 void font_init(FONT_T **font);
-//Destroi variavel de fonte
+// Destroi variavel de fonte
 void font_deinit(FONT_T **font);
 
 
 // --- background ---
-//Inicia background
+// Inicia background
 void background_init(ALLEGRO_BITMAP **bg);
-//Destroi background
+// Destroi background
 void background_deinit(ALLEGRO_BITMAP **bg);
-//Desenha background
+// Desenha background
 void background_draw(ALLEGRO_BITMAP *bg);
 
 
 // --- STARS ---
-//Inicia estrelas
+// Inicia estrelas
 void stars_init(STAR stars[]);
-//Destroi estrelas
+// Destroi estrelas
 void stars_update(STAR stars[]);
-//Renderiza estrelas
+// Renderiza estrelas
 void stars_draw(STAR stars[]);
 
 
 // --- SCORE ---
-//Inicia score
+// Inicia score
 void score_init(SCORE **score);
-//Destroi score
+// Destroi score
 void score_deinit(SCORE **score);
-//Renderiza score
+// Renderiza score
 void score_draw (SCORE *score, ALLEGRO_FONT *font);
 
 
+// --- MISSION ---
+// Inicia missão
+void mission_init(MISSION **mission);
+// Destroi missão
+void mission_deinit(MISSION **mission);
+// Renderiz missão
+void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_sprite);
+
+
 // --- BOARD ---
-//Inicia board
+// Inicia board
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite);
-//Destroi board
+// Destroi board
 void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite);
-//Renderiza board
+// Renderiza board
 void board_draw(JEWEL **board, ALLEGRO_BITMAP **piece_sprite);
 
 
 
 // --- Maquina de estados ---
-//Inicia maquina de estados
+// Inicia maquina de estados
 void state_init(STATES *global_states);
 
 

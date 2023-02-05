@@ -3,6 +3,7 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/bitmap.h>
+#include <allegro5/bitmap_draw.h>
 
 // --- AUDIO ---
 //Inicia variaveis de audio
@@ -13,6 +14,9 @@ void audio_init(AUDIO_T **audio){
 
   (*audio)->bg_music = al_load_audio_stream("../resources/sound/Haggstrom.opus", 2, 2048);
   must_init((*audio)->bg_music, "Background music");
+
+  (*audio)->menu_button_effect = al_load_sample("../resources/sound/menu_button_sound.wav");
+  must_init((*audio)->bg_music, "Menu button effect");
 
   (*audio)->fall_snd_effect = al_load_sample("../resources/sound/rock_fall.wav");
   must_init((*audio)->fall_snd_effect, "Fall effect");
@@ -26,6 +30,7 @@ void audio_init(AUDIO_T **audio){
 //Destroi variaveis de audio
 void audio_deinit(AUDIO_T **audio){
   al_destroy_audio_stream((*audio)->bg_music);
+  al_destroy_sample((*audio)->menu_button_effect);
   al_destroy_sample((*audio)->fall_snd_effect);
   al_destroy_sample((*audio)->special1_snd_effect);
   al_destroy_sample((*audio)->special2_snd_effect);
@@ -124,9 +129,8 @@ void score_deinit(SCORE **score){
   FILE *filename = fopen("../resources/score/score_history.txt", "a");
   must_init(filename, "Save game score");
 
-  if ( (*score)->local_score > (*score)->global_score ){
-    fprintf(filename, "%d\n",(*score)->local_score);
-  }
+  if ( (*score)->local_score >= (*score)->global_score ){
+    fprintf(filename, "%d\n",(*score)->local_score); }
 
   fclose(filename);
   free(*score);
@@ -139,10 +143,35 @@ void score_draw (SCORE *score, ALLEGRO_FONT *font){
   snprintf(str_score, 20, "%d", score->local_score);
   snprintf(str_global_score, 20, "%d", score->global_score);
 
-  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/4.0 + 40   , 30, ALLEGRO_ALIGN_CENTER, "SCORE");
-  al_draw_text(font, al_map_rgb(255, 255, 255), 3*DISP_W/4.0 - 40 , 30, ALLEGRO_ALIGN_CENTER, "RECORD");
-  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/4.0 + 40   , 90, ALLEGRO_ALIGN_CENTER, str_score);
-  al_draw_text(font, al_map_rgb(255, 255, 255), 3*DISP_W/4.0 - 40 , 90, ALLEGRO_ALIGN_CENTER, str_global_score);
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/4.0 - 20   , 30, ALLEGRO_ALIGN_CENTER, "SCORE");
+  al_draw_text(font, al_map_rgb(255, 255, 255), 3*DISP_W/4.0      , 30, ALLEGRO_ALIGN_CENTER, "RECORD");
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/4.0 - 20   , 90, ALLEGRO_ALIGN_CENTER, str_score);
+  al_draw_text(font, al_map_rgb(255, 255, 255), 3*DISP_W/4.0      , 90, ALLEGRO_ALIGN_CENTER, str_global_score);
+}
+
+
+// --- MISSION ---
+// Inicia missão
+void mission_init(MISSION **mission){
+  (*mission) = malloc( sizeof(MISSION) );
+  must_init(*mission, "Mission");
+
+  (*mission)->type = between(0, JEWEL_TYPE_N);
+  (*mission)->quant = 0;
+  (*mission)->level = 0;
+}
+// Destroi missão
+void mission_deinit(MISSION **mission){
+  free(*mission);
+}
+// Renderiz missão
+void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_sprite){
+  char str_quant[20];
+  snprintf(str_quant, 20, "%d/10 %d", mission->quant, mission->level);
+
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 10, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 10, 90, ALLEGRO_ALIGN_CENTER, str_quant);
+  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 340, 240, DISP_W/2.0 - 135, 84, 260, 160, 0);
 }
 
 

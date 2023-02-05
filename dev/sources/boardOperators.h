@@ -9,7 +9,7 @@
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario
-int jewel_fall(GAME_ENGINE *game_set);
+int jewel_fall(GAME_ENGINE *game_set, int sound_flag);
 
 //Renderiza troca de joias e testa se deve desfazer
 void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse);

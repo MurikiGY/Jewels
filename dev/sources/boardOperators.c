@@ -482,7 +482,7 @@ int vertical_test(GAME_ENGINE *game_set){
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario
-int jewel_fall(GAME_ENGINE *game_set){
+int jewel_fall(GAME_ENGINE *game_set,int sound_flag){
   JEWEL **board = game_set->board;
   STATES *global_state = &(game_set->global_state);
   int *i_fall = &(global_state->i_jewel_fall);
@@ -499,7 +499,7 @@ int jewel_fall(GAME_ENGINE *game_set){
 
       //Atualiza pontuacao
       game_set->score->local_score += 100 * jewel_quant;
-      if ( game_set->score->local_score > game_set->score->global_score )
+      if ( game_set->score->local_score >= game_set->score->global_score )
         game_set->score->global_score = game_set->score->local_score;
 
       //Se marcou pontuacao, muda pra fall_board
@@ -548,7 +548,8 @@ int jewel_fall(GAME_ENGINE *game_set){
       if ( *fall_flag == 1 ){
         (*i_fall)++;
         if ( *i_fall > BOARD_N ){
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          if ( sound_flag )
+            al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           global_state->fall_state = TEST_FALL; } }
       break;
   }
@@ -658,7 +659,7 @@ void board_update(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGIN
       break;
 
     case BOARD_JEWEL_FALL:                                    //Desce joias do matchpoint
-      jewel_fall(game_set);
+      jewel_fall(game_set, 1);
       break;
   }
 }

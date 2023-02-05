@@ -34,6 +34,7 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   background_init(&game_set->bg);
   stars_init(game_set->stars);
   score_init(&game_set->score);
+  mission_init(&game_set->mission);
   game_set->board = board_init(game_set->piece_sprite);
   state_init(&game_set->global_state);
 
@@ -46,9 +47,9 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   al_register_event_source(al_engine->queue, al_get_timer_event_source(al_engine->timer));
   al_register_event_source(al_engine->queue, al_get_display_event_source(al_engine->display));
  
-  int ok = jewel_fall(game_set);
+  int ok = jewel_fall(game_set, 0);
   while ( ok )
-    ok = jewel_fall(game_set);
+    ok = jewel_fall(game_set, 0);
   game_set->score->local_score = 0;
 
   //Muda para o menu
@@ -69,14 +70,21 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
         stars_update(game_set->stars);
         //Se new_game
         if ( al_engine->mouse->x_clk > BUFFER_W/4 && al_engine->mouse->x_clk < 3*BUFFER_W/4 &&
-             al_engine->mouse->y_clk > 375  && al_engine->mouse->y_clk < 450 ){
+             al_engine->mouse->y_clk > 380  && al_engine->mouse->y_clk < 440 ){
+          *game_status = GAME_PLAY;
           game_set->score->local_score = 0;
-          done = true;
-        }
+          done = true; }
         //Se continue
         if ( al_engine->mouse->x_clk > BUFFER_W/4 && al_engine->mouse->x_clk < 3*BUFFER_W/4 &&
-             al_engine->mouse->y_clk > 525  && al_engine->mouse->y_clk < 600 )
-          done = true;
+             al_engine->mouse->y_clk > 500  && al_engine->mouse->y_clk < 560 ){
+          *game_status = GAME_PLAY;
+          done = true; }
+        //if ( al_engine->mouse->x > BUFFER_W/4 && al_engine->mouse->x < 3*BUFFER_W/4 &&
+        //     al_engine->mouse->y > 380  && al_engine->mouse->y < 440 ){
+        //  al_play_sample(game_set->audio->menu_button_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0); }
+        //if ( al_engine->mouse->x > BUFFER_W/4 && al_engine->mouse->x < 3*BUFFER_W/4 &&
+        //     al_engine->mouse->y > 500  && al_engine->mouse->y < 560 ){
+        //  al_play_sample(game_set->audio->menu_button_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0); }
 
         redraw = true;
         break;
@@ -99,13 +107,13 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       //Draw functions
       background_draw(game_set->bg);
       stars_draw(game_set->stars);
-      al_draw_filled_rounded_rectangle(BUFFER_W/4.0, 375, 3*BUFFER_W/4.0, 450, 20, 20, al_map_rgb(103, 103, 0)); //New game
-      al_draw_rounded_rectangle(BUFFER_W/4.0, 375, 3*BUFFER_W/4.0, 450, 20, 20, al_map_rgb(0, 51, 25), 5); //New game
-      al_draw_filled_rounded_rectangle(BUFFER_W/4.0, 525, 3*BUFFER_W/4.0, 600, 20, 20, al_map_rgb(103, 103, 0)); //Continue
-      al_draw_rounded_rectangle(BUFFER_W/4.0, 525, 3*BUFFER_W/4.0, 600, 20, 20, al_map_rgb(0, 51, 25), 5); //Continue
+      al_draw_filled_rounded_rectangle(BUFFER_W/4.0, 380, 3*BUFFER_W/4.0, 440, 20, 20, al_map_rgb(153, 76, 0)); //New game
+      al_draw_rounded_rectangle(BUFFER_W/4.0, 380, 3*BUFFER_W/4.0, 440, 20, 20, al_map_rgb(64, 64, 64), 5); //New game
+      al_draw_filled_rounded_rectangle(BUFFER_W/4.0, 500, 3*BUFFER_W/4.0, 560, 20, 20, al_map_rgb(153, 76, 0)); //Continue
+      al_draw_rounded_rectangle(BUFFER_W/4.0, 500, 3*BUFFER_W/4.0, 560, 20, 20, al_map_rgb(64, 64, 64), 5); //Continue
       al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 175, ALLEGRO_ALIGN_CENTER, "ROCK FALL");
-      al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 400, ALLEGRO_ALIGN_CENTER, "NEW GAME");
-      al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 550, ALLEGRO_ALIGN_CENTER, "CONTINUE");
+      al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 395, ALLEGRO_ALIGN_CENTER, "NEW GAME");
+      al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 515, ALLEGRO_ALIGN_CENTER, "CONTINUE");
 
 
       display_post_draw(&al_engine->buffer, &al_engine->display);
@@ -115,9 +123,6 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   
   //Limpa sujeira do teclado
   memset(al_engine->key, 0, sizeof(unsigned char) * ALLEGRO_KEY_MAX);
-
-  //Muda para game_play
-  *game_status = GAME_PLAY;
 }
 
 //Carrega o jogo
@@ -133,18 +138,17 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
         //Update functions
         stars_update(game_set->stars);
         board_update(game_status, al_engine, game_set);
-
-        if ( al_engine->mouse->x_clk > 30 && al_engine->mouse->x_clk < 95 &&
+        //Back button
+        if ( al_engine->mouse->x_clk > 10 && al_engine->mouse->x_clk < 75 &&
              al_engine->mouse->y_clk > 25 && al_engine->mouse->y_clk < 65 ){
           *game_status = GAME_MENU;
-          al_engine->mouse->x_clk = -1; al_engine->mouse->y_clk = -1;
-          done = true;
-        }
+          done = true; }
 
+        //ESC
         if ( al_engine->key[ALLEGRO_KEY_ESCAPE] ){
+          al_engine->mouse->x_clk = -1; al_engine->mouse->y_clk = -1;
           *game_status = GAME_MENU;
-          done = true;
-        }
+          done = true; }
 
         redraw = true;
         break;
@@ -168,9 +172,11 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       background_draw(game_set->bg);
       stars_draw(game_set->stars);
       score_draw(game_set->score, game_set->font->score_font);
+      mission_draw(game_set->mission, game_set->font->score_font, game_set->piece_sprite);
       board_draw(game_set->board, game_set->piece_sprite);
-      al_draw_filled_rounded_rectangle(50, 35, 95, 55, 5, 5, al_map_rgb(255, 255, 255));
-      al_draw_filled_triangle(30, 45, 55, 25, 55, 65, al_map_rgb(255, 255, 255));
+      //Back button
+      al_draw_filled_rounded_rectangle(30, 37, 75, 53, 5, 5, al_map_rgb(204, 102, 0));
+      al_draw_filled_triangle(10, 45, 35, 25, 35, 65, al_map_rgb(204, 102, 0));
 
 
       display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
@@ -193,6 +199,7 @@ void destroy_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGIN
   audio_deinit(&game_set->audio);
   font_deinit(&game_set->font);
   score_deinit(&game_set->score);
+  mission_deinit(&game_set->mission);
   background_deinit(&game_set->bg);
   board_deinit(&game_set->board, game_set->piece_sprite);
 
