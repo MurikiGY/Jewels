@@ -2,16 +2,14 @@
 #define _BOARDOPERATORS_
 
 #include "utils.h"
+#include "states.h"
 #include "allegroEngine.h"
 #include "libGame.h"
-
-//Retorna se tem sequencia de três
-int board_check(JEWEL **board);
 
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario
-int jewel_fall(JEWEL **board, STATES *global_state, SCORE *game_score);
+int jewel_fall(GAME_ENGINE *game_set);
 
 //Renderiza troca de joias e testa se deve desfazer
 void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse);
@@ -20,7 +18,7 @@ void switch_jewels(JEWEL **board, STATES *global_state, MOUSE *mouse);
 void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse);
 
 //Atualiza board
-void board_update(JEWEL **board, STATES *global_state, MOUSE *mouse, SCORE *game_score);
+void board_update(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set);
 
 
 #endif

@@ -43,9 +43,9 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   al_register_event_source(al_engine->queue, al_get_timer_event_source(al_engine->timer));
   al_register_event_source(al_engine->queue, al_get_display_event_source(al_engine->display));
  
-  int ok = jewel_fall(game_set->board, &game_set->global_state, game_set->score);
+  int ok = jewel_fall(game_set);
   while ( ok )
-    ok = jewel_fall(game_set->board, &game_set->global_state, game_set->score);
+    ok = jewel_fall(game_set);
   game_set->score->local_score = 0;
 
   //Muda para o menu
@@ -54,7 +54,6 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
 
 //Carrega menu interativo
 void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
-
   //Muda para game_play
   *game_status = GAME_PLAY;
 }
@@ -72,7 +71,7 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       case ALLEGRO_EVENT_TIMER:
         //Update functions
         stars_update(game_set->stars);
-        board_update(game_set->board, &game_set->global_state, al_engine->mouse, game_set->score);
+        board_update(game_status, al_engine, game_set);
 
         if ( al_engine->key[ALLEGRO_KEY_ESCAPE] )
           done = true;
@@ -102,7 +101,6 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
     } //If (done)
   } //While (1)
-
   //Muda para game_over
   *game_status = GAME_OVER;
 }
