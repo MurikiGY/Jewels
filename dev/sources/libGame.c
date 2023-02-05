@@ -39,12 +39,16 @@ void font_init(FONT_T **font){
   (*font) = malloc( sizeof(FONT_T) );
   must_init((*font), "Game Font");
 
-  (*font)->score_font = al_load_font("../resources/fonts/MASLITE.otf", 36, 0);
-  must_init((*font)->score_font, "Fonte MASLITE");
+  (*font)->score_font = al_load_font("../resources/fonts/half_bold_pixel-7.ttf", 36, 0);
+  must_init((*font)->score_font, "Score Font");
+
+  (*font)->title_font = al_load_font("../resources/fonts/half_bold_pixel-7.ttf", 55, 0);
+  must_init((*font)->title_font, "Title Font");
 }
 //Destroi variavel de fonte
 void font_deinit(FONT_T **font){
   al_destroy_font((*font)->score_font);
+  al_destroy_font((*font)->title_font);
   free(*font);
 }
 
@@ -120,8 +124,6 @@ void score_deinit(SCORE **score){
   FILE *filename = fopen("../resources/score/score_history.txt", "a");
   must_init(filename, "Save game score");
 
-  printf("score: %d\n", (*score)->local_score);
-  printf("score: %d\n", (*score)->global_score);
   if ( (*score)->local_score > (*score)->global_score ){
     fprintf(filename, "%d\n",(*score)->local_score);
   }

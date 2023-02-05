@@ -19,6 +19,7 @@ typedef struct audio {
 // --- FONTE ---
 typedef struct font {
   ALLEGRO_FONT            *score_font;
+  ALLEGRO_FONT            *title_font;
 } FONT_T;
 
 

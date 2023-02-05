@@ -499,6 +499,8 @@ int jewel_fall(GAME_ENGINE *game_set){
 
       //Atualiza pontuacao
       game_set->score->local_score += 100 * jewel_quant;
+      if ( game_set->score->local_score > game_set->score->global_score )
+        game_set->score->global_score = game_set->score->local_score;
 
       //Se marcou pontuacao, muda pra fall_board
       if ( jewel_quant ){
