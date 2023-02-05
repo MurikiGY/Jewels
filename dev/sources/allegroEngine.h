@@ -1,23 +1,9 @@
 #ifndef _ALLEGROENGINE_
 #define _ALLEGROENGINE_
 
-#include <allegro5/display.h>
-#include <allegro5/bitmap.h>
-#include <allegro5/bitmap_draw.h>
-#include <allegro5/bitmap_io.h>
-#include <allegro5/events.h>
-#include <allegro5/mouse.h>
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
-#include <allegro5/allegro_image.h>
-
+#include "utils.h"
 
 // --- ALLEGRO SYSTEM ---
-
 // --- DISPLAY ---
 #define BUFFER_W 720
 #define BUFFER_H 720
@@ -75,7 +61,7 @@ void keyboard_update(ALLEGRO_EVENT* event, unsigned char key[]);
 //Inicia estrutura mouse
 MOUSE *mouse_init();
 //Destroi estrutura mouse
-void mouse_deinit(MOUSE *mouse);
+void mouse_deinit(MOUSE **mouse);
 //Atualiza mouse
 void mouse_update(ALLEGRO_EVENT* event, MOUSE *mouse);
 
