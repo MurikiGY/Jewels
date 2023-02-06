@@ -195,13 +195,12 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
 }
 
 //Tela de game over
-void game_over(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
+void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
   //Muda para destroy_game
-  *game_status = DESTROY_GAME;
 }
 
 //Destroi tudo
-void destroy_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
+void game_over(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
   //Destroi game_set
   audio_deinit(&game_set->audio);
   font_deinit(&game_set->font);

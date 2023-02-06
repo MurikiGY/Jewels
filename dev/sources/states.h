@@ -10,8 +10,8 @@ typedef enum state_game {
   LOAD_GAME = 0,
   GAME_MENU,
   GAME_PLAY,
+  GAME_HELP,
   GAME_OVER,
-  DESTROY_GAME,
   FINISH
 } GAME_STATE;
 
@@ -24,9 +24,9 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
 //Carrega o jogo
 void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set);
 //Tela de game over
-void game_over(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set);
+void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set);
 //Destroi estruturas do jogo
-void destroy_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set);
+void game_over(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set);
 
 
 #endif
