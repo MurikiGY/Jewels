@@ -26,6 +26,9 @@ void audio_init(AUDIO_T **audio){
 
   (*audio)->special2_snd_effect = al_load_sample("../resources/sound/special_explosion2.wav");
   must_init((*audio)->special2_snd_effect, "Special2 effect");
+
+  (*audio)->level_up_sound = al_load_sample("../resources/sound/level_up_sound.wav");
+  must_init((*audio)->level_up_sound, "Level up sound");
 }
 //Destroi variaveis de audio
 void audio_deinit(AUDIO_T **audio){
@@ -34,6 +37,7 @@ void audio_deinit(AUDIO_T **audio){
   al_destroy_sample((*audio)->fall_snd_effect);
   al_destroy_sample((*audio)->special1_snd_effect);
   al_destroy_sample((*audio)->special2_snd_effect);
+  al_destroy_sample((*audio)->level_up_sound);
   free(*audio);
 }
 

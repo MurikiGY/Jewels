@@ -6,6 +6,9 @@
 #include "allegroEngine.h"
 #include "libGame.h"
 
+//Gera um novo tabuleiro
+void gen_new_board(GAME_ENGINE *game_set);
+
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario

@@ -2,6 +2,20 @@
 #include "libGame.h"
 #include "utils.h"
 
+
+//Gera um novo tabuleiro
+void gen_new_board(GAME_ENGINE *game_set){
+  for (int i=0; i<BOARD_N+1 ;i++)
+    for (int j=0; j<BOARD_N ;j++)
+      game_set->board[i][j].type = between(0, JEWEL_TYPE_N);
+
+  //Inicia board consistente
+  int ok = jewel_fall(game_set, 0);
+  while ( ok )
+    ok = jewel_fall(game_set, 0);
+}
+
+
 //Retorna se tem sequencia de três
 int board_check(JEWEL **board){
   //Verifica horizontal
@@ -104,6 +118,8 @@ void hide_special_explosion(GAME_ENGINE *game_set, int i, int j){
   JEWEL **board = game_set->board;
   //Se explosao circular
   if ( board[i][j].type >= JEWEL_TYPE_N && board[i][j].type < 2*JEWEL_TYPE_N ){	//Se tipo > 5 e < 12
+    //Marca pontuação
+    game_set->score->local_score += 800;
     //Remove tipo especial para não backtraking infinito
     board[i][j].type -= JEWEL_TYPE_N;
     int a_end = i+2,  b_start = j-1,   b_end = j+2;
@@ -114,22 +130,30 @@ void hide_special_explosion(GAME_ENGINE *game_set, int i, int j){
     for (int a=i-1; a<a_end ;a++)
       for (int b=b_start; b<b_end  ;b++){
         board[a][b].draw = 0;
+        if ( game_set->mission->type == board[a][b].type )
+          game_set->mission->quant += 1;
         if ( board[a][b].type >= JEWEL_TYPE_N )  //Se tipo especial
           hide_special_explosion(game_set, a, b); }
     al_play_sample(game_set->audio->special1_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
 
   } else if ( board[i][j].type >= 2*JEWEL_TYPE_N ) {  //Explosao em cruz
-                                                      //remove tipo especial
+    //Marca pontuação
+    game_set->score->local_score += 1500;
+    //remove tipo especial
     board[i][j].type -= 2*JEWEL_TYPE_N;
     //Esconde horizontal
     for (int aux=0; aux<BOARD_N ;aux++){
       board[i][aux].draw = 0;
+      if ( game_set->mission->type == board[i][aux].type )
+        game_set->mission->quant += 1;
       if ( board[i][aux].type >= JEWEL_TYPE_N )
         hide_special_explosion(game_set, i, aux); }
 
     //Esconde vertical
     for (int aux=1; aux<BOARD_N+1 ;aux++){
       board[aux][j].draw = 0;
+      if ( game_set->mission->type == board[aux][j].type )
+        game_set->mission->quant += 1;
       if ( board[aux][j].type >= JEWEL_TYPE_N )
         hide_special_explosion(game_set, aux, j); }
     al_play_sample(game_set->audio->special2_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
@@ -139,7 +163,6 @@ void hide_special_explosion(GAME_ENGINE *game_set, int i, int j){
 
 //Verifica mathpoint
 int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
-
   switch ( match_type ){
     case 1:                                                                         //Caso simples
       if (board[i][j].type   ==  tipo || abs(tipo-board[i][j].type)  == JEWEL_TYPE_N  || abs(tipo-board[i][j].type)  == 2*JEWEL_TYPE_N)
@@ -222,7 +245,6 @@ int matchpoint_verify (JEWEL **board, int tipo, int i, int j, int match_type){
         return 1;
       break;
   }
-
   return 0;
 }
 
@@ -312,7 +334,7 @@ void hide_pieces(GAME_ENGINE *game_set, int tipo, int i, int j, int match_type){
 
 //Verifica matchpoint de L em pe
 //Retorna quantas joias foram destruidas
-int L_test(GAME_ENGINE *game_set){
+int L_test(GAME_ENGINE *game_set, int sound_flag){
   JEWEL **board = game_set->board;
   int quant = 0;
   //Verifica l normal
@@ -326,6 +348,9 @@ int L_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 1);                            //Escode joias a descer
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica l invertido
@@ -339,6 +364,9 @@ int L_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 2);                            //Esconde joias a descer
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica l de ponta-cabeça
@@ -352,6 +380,9 @@ int L_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 3);                            //Esconde joias a descer
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica l invertido e de ponta-cabeça
@@ -365,6 +396,9 @@ int L_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 4);                            //Esconde joias a descer
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   return quant;
@@ -372,7 +406,7 @@ int L_test(GAME_ENGINE *game_set){
 
 //Verifica matchpoint em T
 //Retorna numero de joias marcadas
-int T_test(GAME_ENGINE *game_set){
+int T_test(GAME_ENGINE *game_set, int sound_flag){
   JEWEL **board = game_set->board;
   int quant = 0;
   //Verifica T em pe
@@ -386,6 +420,9 @@ int T_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 5);                            //Esconde joias
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica T de ponta cabeca
@@ -399,6 +436,9 @@ int T_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 6);
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica T deitado para esquerda
@@ -412,6 +452,9 @@ int T_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 7);
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica T deitado para direita
@@ -425,6 +468,9 @@ int T_test(GAME_ENGINE *game_set){
         }
         hide_pieces(game_set, tipo, i, j, 8);
         quant += 5;
+        game_set->score->local_score += 500;
+        if ( sound_flag )
+          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   return quant;
@@ -433,7 +479,7 @@ int T_test(GAME_ENGINE *game_set){
 
 //Verifica matchpoint na horizontal
 //Retorna numero de peças destruidas
-int horizontal_test(GAME_ENGINE *game_set){
+int horizontal_test(GAME_ENGINE *game_set, int sound_flag){
   JEWEL **board = game_set->board;
   int quant = 0;
   for (int i=1; i<BOARD_N+1 ;i++)
@@ -450,9 +496,11 @@ int horizontal_test(GAME_ENGINE *game_set){
             else
               if ( board[i][aux].special_gen_flag == 0 )
                 hide_special_explosion(game_set, i, aux);
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          if ( sound_flag )
+            al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           if ( game_set->mission->type == tipo )
             game_set->mission->quant += k-j;
+          game_set->score->local_score += 100*(k-j);
 
           //Gera joia especial
           if ( k-j == 5 ){
@@ -467,7 +515,7 @@ int horizontal_test(GAME_ENGINE *game_set){
 
 //Verifica matchpoint na vertical
 //Retorna numero de peças destruidas
-int vertical_test(GAME_ENGINE *game_set){
+int vertical_test(GAME_ENGINE *game_set, int sound_flag){
   JEWEL **board = game_set->board;
   int quant = 0;
   for (int i=1; i<BOARD_N-1 ;i++)
@@ -484,9 +532,11 @@ int vertical_test(GAME_ENGINE *game_set){
             else
               if ( board[aux][j].special_gen_flag == 0 )
                 hide_special_explosion(game_set, aux, j);
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          if ( sound_flag )
+            al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           if ( game_set->mission->type == tipo )
             game_set->mission->quant += k-i;
+          game_set->score->local_score += 100*(k-i);
 
           //Gera joia especial
           if ( k-i == 5 ){
@@ -513,18 +563,19 @@ int jewel_fall(GAME_ENGINE *game_set,int sound_flag){
   switch ( global_state->fall_state ){
     case TEST_FALL:
       //Bateria de testes
-      jewel_quant += T_test(game_set);
-      jewel_quant += L_test(game_set);
-      jewel_quant += horizontal_test(game_set);
-      jewel_quant += vertical_test(game_set);
+      jewel_quant += T_test(game_set, sound_flag);
+      jewel_quant += L_test(game_set, sound_flag);
+      jewel_quant += horizontal_test(game_set, sound_flag);
+      jewel_quant += vertical_test(game_set, sound_flag);
 
       //Atualiza pontuacao
-      game_set->score->local_score += 100 * jewel_quant;
-      if ( game_set->score->local_score >= game_set->score->global_score )
-        game_set->score->global_score = game_set->score->local_score;
+      if ( sound_flag )
+        if ( game_set->score->local_score >= game_set->score->global_score )
+          game_set->score->global_score = game_set->score->local_score;
 
       //Atualiza missão
       if ( game_set->mission->quant >= 10 ){
+            al_play_sample(game_set->audio->level_up_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         game_set->mission->quant = 0;
         game_set->mission->level += 1;
         game_set->mission->type = between(0, JEWEL_TYPE_N);

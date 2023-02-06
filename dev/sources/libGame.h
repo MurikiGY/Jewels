@@ -5,6 +5,7 @@
 
 #include "allegroEngine.h"
 #include "utils.h"
+#include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/bitmap.h>
 
@@ -15,6 +16,7 @@ typedef struct audio {
   ALLEGRO_SAMPLE          *fall_snd_effect;       //Efeito da queda
   ALLEGRO_SAMPLE          *special1_snd_effect;   //Explosão do especial 1
   ALLEGRO_SAMPLE          *special2_snd_effect;   //Explosão do especial 2
+  ALLEGRO_SAMPLE          *level_up_sound;
 } AUDIO_T;
 
 

@@ -75,6 +75,7 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
         if ( al_engine->mouse->x_clk > BUFFER_W/4 && al_engine->mouse->x_clk < 3*BUFFER_W/4 &&
              al_engine->mouse->y_clk > 380  && al_engine->mouse->y_clk < 440 ){
           *game_status = GAME_PLAY;
+          gen_new_board(game_set);
           game_set->score->local_score = 0;
           game_set->mission->level = 0;
           game_set->mission->quant = 0;
