@@ -171,7 +171,7 @@ void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_s
 
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 10, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 10, 90, ALLEGRO_ALIGN_CENTER, str_quant);
-  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 340, 240, DISP_W/2.0 - 135, 84, 260, 160, 0);
+  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 340, 240, DISP_W/2.0 - 130, 84, 260, 160, 0);
 }
 
 

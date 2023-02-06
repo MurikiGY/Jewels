@@ -47,10 +47,13 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   al_register_event_source(al_engine->queue, al_get_timer_event_source(al_engine->timer));
   al_register_event_source(al_engine->queue, al_get_display_event_source(al_engine->display));
  
+  //Inicia board consistente
   int ok = jewel_fall(game_set, 0);
   while ( ok )
     ok = jewel_fall(game_set, 0);
   game_set->score->local_score = 0;
+  game_set->mission->level = 0;
+  game_set->mission->quant = 0;
 
   //Muda para o menu
   *game_status = GAME_MENU;
@@ -73,6 +76,9 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
              al_engine->mouse->y_clk > 380  && al_engine->mouse->y_clk < 440 ){
           *game_status = GAME_PLAY;
           game_set->score->local_score = 0;
+          game_set->mission->level = 0;
+          game_set->mission->quant = 0;
+          game_set->mission->type = between(0, JEWEL_TYPE_N);
           done = true; }
         //Se continue
         if ( al_engine->mouse->x_clk > BUFFER_W/4 && al_engine->mouse->x_clk < 3*BUFFER_W/4 &&

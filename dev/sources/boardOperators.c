@@ -1,5 +1,6 @@
 #include "boardOperators.h"
 #include "libGame.h"
+#include "utils.h"
 
 //Retorna se tem sequencia de três
 int board_check(JEWEL **board){
@@ -324,7 +325,9 @@ int L_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(game_set, tipo, i, j, 1);                            //Escode joias a descer
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   //Verifica l invertido
   for (int i=3; i<BOARD_N+1 ;i++)                                     //Vai de 3 a 8
     for (int j=2; j<BOARD_N ;j++){                                    //Vai de 2 a 7
@@ -335,7 +338,9 @@ int L_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(game_set, tipo, i, j, 2);                            //Esconde joias a descer
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   //Verifica l de ponta-cabeça
   for (int i=1; i<BOARD_N-1 ;i++)                                     //Vai de 1 a 6
     for (int j=0; j<BOARD_N-2 ;j++){                                  //Vai de 0 a 5
@@ -346,7 +351,9 @@ int L_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(game_set, tipo, i, j, 3);                            //Esconde joias a descer
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   //Verifica l invertido e de ponta-cabeça
   for (int i=1; i<BOARD_N-1 ;i++)                                     //Vai de 1 a 6
     for (int j=2; j<BOARD_N ;j++){                                    //Vai de 2 a 7
@@ -357,7 +364,9 @@ int L_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(game_set, tipo, i, j, 4);                            //Esconde joias a descer
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   return quant;
 }
 
@@ -376,7 +385,9 @@ int T_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;                           //Seta flag de recem gerado
         }
         hide_pieces(game_set, tipo, i, j, 5);                            //Esconde joias
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   //Verifica T de ponta cabeca
   for (int i=3; i<BOARD_N+1 ;i++)
     for (int j=1; j<BOARD_N-1; j++){
@@ -387,7 +398,9 @@ int T_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;
         }
         hide_pieces(game_set, tipo, i, j, 6);
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   //Verifica T deitado para esquerda
   for (int i=2; i<BOARD_N ;i++)
     for (int j=0; j<BOARD_N-2; j++){
@@ -398,7 +411,9 @@ int T_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;
         }
         hide_pieces(game_set, tipo, i, j, 7);
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   //Verifica T deitado para direita
   for (int i=2; i<BOARD_N ;i++)
     for (int j=2; j<BOARD_N; j++){
@@ -409,7 +424,9 @@ int T_test(GAME_ENGINE *game_set){
           board[i][j].special_gen_flag = 1;
         }
         hide_pieces(game_set, tipo, i, j, 8);
-        quant += 5; } }
+        quant += 5;
+        if ( game_set->mission->type == tipo )
+          game_set->mission->quant += 5; } }
   return quant;
 }
 
@@ -434,6 +451,8 @@ int horizontal_test(GAME_ENGINE *game_set){
               if ( board[i][aux].special_gen_flag == 0 )
                 hide_special_explosion(game_set, i, aux);
           al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          if ( game_set->mission->type == tipo )
+            game_set->mission->quant += k-j;
 
           //Gera joia especial
           if ( k-j == 5 ){
@@ -466,6 +485,8 @@ int vertical_test(GAME_ENGINE *game_set){
               if ( board[aux][j].special_gen_flag == 0 )
                 hide_special_explosion(game_set, aux, j);
           al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          if ( game_set->mission->type == tipo )
+            game_set->mission->quant += k-i;
 
           //Gera joia especial
           if ( k-i == 5 ){
@@ -501,6 +522,13 @@ int jewel_fall(GAME_ENGINE *game_set,int sound_flag){
       game_set->score->local_score += 100 * jewel_quant;
       if ( game_set->score->local_score >= game_set->score->global_score )
         game_set->score->global_score = game_set->score->local_score;
+
+      //Atualiza missão
+      if ( game_set->mission->quant >= 10 ){
+        game_set->mission->quant = 0;
+        game_set->mission->level += 1;
+        game_set->mission->type = between(0, JEWEL_TYPE_N);
+      }
 
       //Se marcou pontuacao, muda pra fall_board
       if ( jewel_quant ){
