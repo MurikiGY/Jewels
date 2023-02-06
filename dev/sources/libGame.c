@@ -171,11 +171,14 @@ void mission_deinit(MISSION **mission){
 // Renderiz missão
 void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_sprite){
   char str_quant[20];
-  snprintf(str_quant, 20, "%d/10 %d", mission->quant, mission->level);
+  char str_level[20];
+  snprintf(str_quant, 20, "%d/10", mission->quant);
+  snprintf(str_level, 20, "%d", mission->level);
 
-  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 10, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 40, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 60, 30, ALLEGRO_ALIGN_CENTER, str_level);
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 10, 90, ALLEGRO_ALIGN_CENTER, str_quant);
-  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 340, 240, DISP_W/2.0 - 130, 84, 260, 160, 0);
+  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 60, 60, DISP_W/2.0 - 100, 84, 40, 40, 0);
 }
 
 

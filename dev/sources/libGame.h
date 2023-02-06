@@ -77,17 +77,14 @@ typedef enum state_board {          //Estados do board
   BOARD_SWITCH_JEWEL,
   BOARD_JEWEL_FALL
 } STATE_BOARD;
-
 typedef enum state_jewel {          //Estados da troca de peças
   JEWEL_GO = 0,
   JEWEL_BACK
 } STATE_JEWEL;
-
 typedef enum state_fall {           //Estado da queda de peças
   TEST_FALL = 0,
   RENDER_FALL
 } STATE_FALL;
-
 typedef struct states {
   STATE_BOARD board_state;          //Maquina de estado do tabuleiro
   STATE_JEWEL jewel_state;          //Maquina de estado da joia
@@ -170,7 +167,6 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite);
 void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite);
 // Renderiza board
 void board_draw(JEWEL **board, ALLEGRO_BITMAP **piece_sprite);
-
 
 
 // --- Maquina de estados ---

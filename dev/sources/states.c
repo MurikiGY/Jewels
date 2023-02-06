@@ -198,7 +198,7 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   memset(al_engine->key, 0, sizeof(unsigned char) * ALLEGRO_KEY_MAX);
 }
 
-//Tela de game over
+//Tela de HELP
 void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
   bool done = false;    //Fim de jogo
   bool redraw = true;   //Renderizar
@@ -208,6 +208,7 @@ void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
     al_wait_for_event(al_engine->queue, &event);
     switch ( event.type ){
       case ALLEGRO_EVENT_TIMER:
+        stars_update(game_set->stars);
         //Back button
         if ( al_engine->mouse->x_clk > 10 && al_engine->mouse->x_clk < 75 &&
              al_engine->mouse->y_clk > 25 && al_engine->mouse->y_clk < 65 ){
@@ -245,6 +246,15 @@ void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       //Back button
       al_draw_filled_rounded_rectangle(30, 37, 75, 53, 5, 5, al_map_rgb(204, 102, 0));
       al_draw_filled_triangle(10, 45, 35, 25, 35, 65, al_map_rgb(204, 102, 0));
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 700, ALLEGRO_ALIGN_LEFT, "Developed by Muriki Gusmão Yamanaka");
+      //Draw strings
+      al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 30, ALLEGRO_ALIGN_CENTER, "HELP");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 100, ALLEGRO_ALIGN_LEFT, "HOW TO PLAY: Click and drag the rocks");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 250, ALLEGRO_ALIGN_LEFT, "SCORE POINT: Sequences of 3 or more rocks");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 400, ALLEGRO_ALIGN_LEFT, "MISSIONS: Destroy rocks that are equal the top board");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 550, ALLEGRO_ALIGN_LEFT, "SPECIALS: Sequences of 5 or more rocks");
+      //Draw bitmaps
+      al_draw_scaled_bitmap(game_set->piece_sprite[game_set->mission->type], 0, 0, 60, 60, DISP_W/2.0 - 50, 150, 50, 50, ALLEGRO_ALIGN_CENTER);
 
       display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
     } //If (done)
