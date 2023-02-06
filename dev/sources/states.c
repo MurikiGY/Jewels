@@ -48,9 +48,10 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   al_register_event_source(al_engine->queue, al_get_display_event_source(al_engine->display));
  
   //Inicia board consistente
-  int ok = jewel_fall(game_set, 0);
-  while ( ok )
-    ok = jewel_fall(game_set, 0);
+  bool aux = false;
+  int ok = jewel_fall(game_set, 0, &aux);
+  while ( ok && !aux )
+    ok = jewel_fall(game_set, 0, &aux);
   game_set->score->local_score = 0;
   game_set->mission->level = 0;
   game_set->mission->quant = 0;
@@ -86,12 +87,10 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
              al_engine->mouse->y_clk > 500  && al_engine->mouse->y_clk < 560 ){
           *game_status = GAME_PLAY;
           done = true; }
-        //if ( al_engine->mouse->x > BUFFER_W/4 && al_engine->mouse->x < 3*BUFFER_W/4 &&
-        //     al_engine->mouse->y > 380  && al_engine->mouse->y < 440 ){
-        //  al_play_sample(game_set->audio->menu_button_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0); }
-        //if ( al_engine->mouse->x > BUFFER_W/4 && al_engine->mouse->x < 3*BUFFER_W/4 &&
-        //     al_engine->mouse->y > 500  && al_engine->mouse->y < 560 ){
-        //  al_play_sample(game_set->audio->menu_button_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0); }
+        //Se H
+        if ( al_engine->key[ALLEGRO_KEY_H] || al_engine->key[ALLEGRO_KEY_F1] ){
+          *game_status = GAME_HELP;
+          done = true; }
 
         redraw = true;
         break;
@@ -121,7 +120,7 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 175, ALLEGRO_ALIGN_CENTER, "ROCK FALL");
       al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 395, ALLEGRO_ALIGN_CENTER, "NEW GAME");
       al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 515, ALLEGRO_ALIGN_CENTER, "CONTINUE");
-
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 700, ALLEGRO_ALIGN_LEFT, "PRESS H OR F1 FOR HELP");
 
       display_post_draw(&al_engine->buffer, &al_engine->display);
       redraw = false;
@@ -136,6 +135,7 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
 void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
   bool done = false;    //Fim de jogo
   bool redraw = true;   //Renderizar
+  bool game_over = false;
   ALLEGRO_EVENT event;
 
   while(1){
@@ -144,10 +144,11 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       case ALLEGRO_EVENT_TIMER:
         //Update functions
         stars_update(game_set->stars);
-        board_update(game_status, al_engine, game_set);
+        board_update(game_status, al_engine, game_set, &game_over);
         //Back button
         if ( al_engine->mouse->x_clk > 10 && al_engine->mouse->x_clk < 75 &&
              al_engine->mouse->y_clk > 25 && al_engine->mouse->y_clk < 65 ){
+          al_engine->mouse->x_clk = -1; al_engine->mouse->y_clk = -1;
           *game_status = GAME_MENU;
           done = true; }
 
@@ -184,6 +185,9 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       //Back button
       al_draw_filled_rounded_rectangle(30, 37, 75, 53, 5, 5, al_map_rgb(204, 102, 0));
       al_draw_filled_triangle(10, 45, 35, 25, 35, 65, al_map_rgb(204, 102, 0));
+      //Game over
+      if ( game_over )
+        al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 175, ALLEGRO_ALIGN_CENTER, "GAME OVER");
 
 
       display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
@@ -196,7 +200,58 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
 
 //Tela de game over
 void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
-  //Muda para destroy_game
+  bool done = false;    //Fim de jogo
+  bool redraw = true;   //Renderizar
+  ALLEGRO_EVENT event;
+
+  while(1){
+    al_wait_for_event(al_engine->queue, &event);
+    switch ( event.type ){
+      case ALLEGRO_EVENT_TIMER:
+        //Back button
+        if ( al_engine->mouse->x_clk > 10 && al_engine->mouse->x_clk < 75 &&
+             al_engine->mouse->y_clk > 25 && al_engine->mouse->y_clk < 65 ){
+          al_engine->mouse->x_clk = -1; al_engine->mouse->y_clk = -1;
+          *game_status = GAME_MENU;
+          done = true; }
+
+        //ESC
+        if ( al_engine->key[ALLEGRO_KEY_ESCAPE] ){
+          al_engine->mouse->x_clk = -1; al_engine->mouse->y_clk = -1;
+          *game_status = GAME_MENU;
+          done = true; }
+
+        redraw = true;
+        break;
+
+      case ALLEGRO_EVENT_DISPLAY_CLOSE:
+        *game_status = GAME_OVER;
+        done = true;
+      break;
+    } //Switch ( event.type )
+
+    if ( done )
+      break;
+
+    keyboard_update(&event, al_engine->key);
+    mouse_update(&event, al_engine->mouse);
+
+    if( redraw && al_is_event_queue_empty(al_engine->queue) ){
+      display_pre_draw(&al_engine->buffer);
+
+      //Draw functions
+      background_draw(game_set->bg);
+      stars_draw(game_set->stars);
+      //Back button
+      al_draw_filled_rounded_rectangle(30, 37, 75, 53, 5, 5, al_map_rgb(204, 102, 0));
+      al_draw_filled_triangle(10, 45, 35, 25, 35, 65, al_map_rgb(204, 102, 0));
+
+      display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
+    } //If (done)
+  } //While (1)
+
+  //Limpa sujeira do teclado
+  memset(al_engine->key, 0, sizeof(unsigned char) * ALLEGRO_KEY_MAX);
 }
 
 //Destroi tudo

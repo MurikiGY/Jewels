@@ -12,7 +12,6 @@
 // --- AUDIO ---
 typedef struct audio {
   ALLEGRO_AUDIO_STREAM    *bg_music;              //Musica de fundo
-  ALLEGRO_SAMPLE          *menu_button_effect;    //Efeito do botao 
   ALLEGRO_SAMPLE          *fall_snd_effect;       //Efeito da queda
   ALLEGRO_SAMPLE          *special1_snd_effect;   //Explosão do especial 1
   ALLEGRO_SAMPLE          *special2_snd_effect;   //Explosão do especial 2
@@ -24,6 +23,7 @@ typedef struct audio {
 typedef struct font {
   ALLEGRO_FONT            *score_font;
   ALLEGRO_FONT            *title_font;
+  ALLEGRO_FONT            *help_font;
 } FONT_T;
 
 

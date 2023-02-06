@@ -10,9 +10,10 @@ void gen_new_board(GAME_ENGINE *game_set){
       game_set->board[i][j].type = between(0, JEWEL_TYPE_N);
 
   //Inicia board consistente
-  int ok = jewel_fall(game_set, 0);
-  while ( ok )
-    ok = jewel_fall(game_set, 0);
+  bool aux = false;
+  int ok = jewel_fall(game_set, 0, &aux);
+  while ( ok && !aux)
+    ok = jewel_fall(game_set, 0, &aux);
 }
 
 
@@ -553,7 +554,7 @@ int vertical_test(GAME_ENGINE *game_set, int sound_flag){
 // Renderiza joias caindo
 // Retorna 1 se tiver joia para cair
 // Retorna 0 do contrario
-int jewel_fall(GAME_ENGINE *game_set,int sound_flag){
+int jewel_fall(GAME_ENGINE *game_set,int sound_flag, bool *game_over){
   JEWEL **board = game_set->board;
   STATES *global_state = &(game_set->global_state);
   int *i_fall = &(global_state->i_jewel_fall);
@@ -590,7 +591,7 @@ int jewel_fall(GAME_ENGINE *game_set,int sound_flag){
       } else
         if ( board_game_over(board) ){
           printf("Game Over ein, ruim pra caramba\n");
-          exit(1);
+          *game_over = true;
         } else 
           global_state->board_state = BOARD_NEW_PLAY;
       return 0;
@@ -727,7 +728,7 @@ void get_new_play(JEWEL **board, STATES *global_state, MOUSE *mouse){
 
 
 //Atualiza board
-void board_update(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
+void board_update(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set, bool *game_over){
   switch ( game_set->global_state.board_state ){
     case BOARD_NEW_PLAY:    //Carrega nova jogada
       get_new_play(game_set->board, &game_set->global_state, al_engine->mouse);
@@ -738,7 +739,7 @@ void board_update(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGIN
       break;
 
     case BOARD_JEWEL_FALL:                                    //Desce joias do matchpoint
-      jewel_fall(game_set, 1);
+      jewel_fall(game_set, 1, game_over);
       break;
   }
 }
