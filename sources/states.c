@@ -5,6 +5,7 @@
 #include "boardOperators.h"
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/bitmap_draw.h>
 #include <allegro5/keycodes.h>
 
 //Carrega bibliotecas do allegro
@@ -241,7 +242,7 @@ void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       display_pre_draw(&al_engine->buffer);
 
       //Draw functions
-      background_draw(game_set->bg);
+      al_draw_bitmap(game_set->bg->help_bf, 0, 0, 0);
       stars_draw(game_set->stars);
       //Back button
       al_draw_filled_rounded_rectangle(30, 37, 75, 53, 5, 5, al_map_rgb(204, 102, 0));
@@ -249,12 +250,10 @@ void game_help(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 700, ALLEGRO_ALIGN_LEFT, "Developed by Muriki Gusmão Yamanaka");
       //Draw strings
       al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 30, ALLEGRO_ALIGN_CENTER, "HELP");
-      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 100, ALLEGRO_ALIGN_LEFT, "HOW TO PLAY: Click and drag the rocks");
-      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 250, ALLEGRO_ALIGN_LEFT, "SCORE POINT: Sequences of 3 or more rocks");
-      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 400, ALLEGRO_ALIGN_LEFT, "MISSIONS: Destroy rocks that are equal the top board");
-      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 550, ALLEGRO_ALIGN_LEFT, "SPECIALS: Sequences of 5 or more rocks");
-      //Draw bitmaps
-      al_draw_scaled_bitmap(game_set->piece_sprite[game_set->mission->type], 0, 0, 60, 60, DISP_W/2.0 - 50, 150, 50, 50, ALLEGRO_ALIGN_CENTER);
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 100, ALLEGRO_ALIGN_LEFT, "HOW TO PLAY: Click and drag the rocks to make sequences");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 300, ALLEGRO_ALIGN_LEFT, "MISSIONS: Destroy rocks with the same collor that");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 140, 330, ALLEGRO_ALIGN_LEFT, "appears over the board");
+      al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), 10, 490, ALLEGRO_ALIGN_LEFT, "SPECIALS: Sequences of 5 or more rocks");
 
       display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
     } //If (done)

@@ -135,7 +135,7 @@ void hide_special_explosion(GAME_ENGINE *game_set, int i, int j){
           game_set->mission->quant += 1;
         if ( board[a][b].type >= JEWEL_TYPE_N )  //Se tipo especial
           hide_special_explosion(game_set, a, b); }
-    al_play_sample(game_set->audio->special1_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+    al_play_sample(game_set->audio->special1_snd_effect, 2.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
 
   } else if ( board[i][j].type >= 2*JEWEL_TYPE_N ) {  //Explosao em cruz
     //Marca pontuação
@@ -351,7 +351,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica l invertido
@@ -367,7 +367,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica l de ponta-cabeça
@@ -383,7 +383,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica l invertido e de ponta-cabeça
@@ -399,7 +399,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   return quant;
@@ -423,7 +423,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica T de ponta cabeca
@@ -439,7 +439,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica T deitado para esquerda
@@ -455,7 +455,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   //Verifica T deitado para direita
@@ -471,7 +471,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         quant += 5;
         game_set->score->local_score += 500;
         if ( sound_flag )
-          al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+          al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
           game_set->mission->quant += 5; } }
   return quant;
@@ -498,7 +498,7 @@ int horizontal_test(GAME_ENGINE *game_set, int sound_flag){
               if ( board[i][aux].special_gen_flag == 0 )
                 hide_special_explosion(game_set, i, aux);
           if ( sound_flag )
-            al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+            al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           if ( game_set->mission->type == tipo )
             game_set->mission->quant += k-j;
           game_set->score->local_score += 100*(k-j);
@@ -534,7 +534,7 @@ int vertical_test(GAME_ENGINE *game_set, int sound_flag){
               if ( board[aux][j].special_gen_flag == 0 )
                 hide_special_explosion(game_set, aux, j);
           if ( sound_flag )
-            al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+            al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           if ( game_set->mission->type == tipo )
             game_set->mission->quant += k-i;
           game_set->score->local_score += 100*(k-i);
@@ -629,7 +629,7 @@ int jewel_fall(GAME_ENGINE *game_set,int sound_flag, bool *game_over){
         (*i_fall)++;
         if ( *i_fall > BOARD_N ){
           if ( sound_flag )
-            al_play_sample(game_set->audio->fall_snd_effect, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+            al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           global_state->fall_state = TEST_FALL; } }
       break;
   }

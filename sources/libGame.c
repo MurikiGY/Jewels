@@ -64,17 +64,25 @@ void font_deinit(FONT_T **font){
 
 // --- BACKGROUND ---
 //Inicia background
-void background_init(ALLEGRO_BITMAP **bg){
-  *bg = al_load_bitmap("resources/background/rock_bg.png");
-  must_init(*bg, "Background");
+void background_init(BG_T **bg){
+  (*bg) = malloc( sizeof(BG_T) );
+  must_init((*bg), "Background");
+
+  (*bg)->main_bg = al_load_bitmap("resources/background/rock_bg.png");
+  must_init((*bg)->main_bg, "Main background");
+
+  (*bg)->help_bf = al_load_bitmap("resources/background/help_bg.png");
+  must_init((*bg)->help_bf, "Help background");
 }
 //Destroi background
-void background_deinit(ALLEGRO_BITMAP **bg){
-  al_destroy_bitmap(*bg);
+void background_deinit(BG_T **bg){
+  al_destroy_bitmap((*bg)->main_bg);
+  al_destroy_bitmap((*bg)->help_bf);
+  free(*bg);
 }
 //Desenha background
-void background_draw(ALLEGRO_BITMAP *bg){
-  al_draw_bitmap(bg, 0, 0, 0);
+void background_draw(BG_T *bg){
+  al_draw_bitmap(bg->main_bg, 0, 0, 0);
 }
 
 

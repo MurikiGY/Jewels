@@ -28,6 +28,10 @@ typedef struct font {
 
 
 // --- BACKGROUND ---
+typedef struct bg {
+  ALLEGRO_BITMAP          *main_bg;
+  ALLEGRO_BITMAP          *help_bf;
+} BG_T;
 
 
 // --- STARS ---
@@ -100,7 +104,7 @@ typedef struct states {
 typedef struct engine_game {
   AUDIO_T                 *audio;                 //audios
   FONT_T                  *font;                  //Fonte
-  ALLEGRO_BITMAP          *bg;                    //imagem de fundo
+  BG_T                    *bg;                    //background
   STAR                    stars[STARS_N];         //Estrelas
   SCORE                   *score;                 //Pontuacao
   MISSION                 *mission;               //Missão
@@ -126,11 +130,11 @@ void font_deinit(FONT_T **font);
 
 // --- background ---
 // Inicia background
-void background_init(ALLEGRO_BITMAP **bg);
+void background_init(BG_T **bg);
 // Destroi background
-void background_deinit(ALLEGRO_BITMAP **bg);
+void background_deinit(BG_T **bg);
 // Desenha background
-void background_draw(ALLEGRO_BITMAP *bg);
+void background_draw(BG_T *bg);
 
 
 // --- STARS ---
