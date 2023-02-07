@@ -12,19 +12,19 @@ void audio_init(AUDIO_T **audio){
   *audio = malloc( sizeof(AUDIO_T));
   must_init(*audio, "Game Audio");
 
-  (*audio)->bg_music = al_load_audio_stream("../resources/sound/Haggstrom.opus", 2, 2048);
+  (*audio)->bg_music = al_load_audio_stream("resources/sound/Haggstrom.opus", 2, 2048);
   must_init((*audio)->bg_music, "Background music");
 
-  (*audio)->fall_snd_effect = al_load_sample("../resources/sound/rock_fall.wav");
+  (*audio)->fall_snd_effect = al_load_sample("resources/sound/rock_fall.wav");
   must_init((*audio)->fall_snd_effect, "Fall effect");
 
-  (*audio)->special1_snd_effect = al_load_sample("../resources/sound/special_explosion1.wav");
+  (*audio)->special1_snd_effect = al_load_sample("resources/sound/special_explosion1.wav");
   must_init((*audio)->special1_snd_effect, "Special1 effect");
 
-  (*audio)->special2_snd_effect = al_load_sample("../resources/sound/special_explosion2.wav");
+  (*audio)->special2_snd_effect = al_load_sample("resources/sound/special_explosion2.wav");
   must_init((*audio)->special2_snd_effect, "Special2 effect");
 
-  (*audio)->level_up_sound = al_load_sample("../resources/sound/level_up_sound.wav");
+  (*audio)->level_up_sound = al_load_sample("resources/sound/level_up_sound.wav");
   must_init((*audio)->level_up_sound, "Level up sound");
 }
 //Destroi variaveis de audio
@@ -44,13 +44,13 @@ void font_init(FONT_T **font){
   (*font) = malloc( sizeof(FONT_T) );
   must_init((*font), "Game Font");
 
-  (*font)->score_font = al_load_font("../resources/fonts/half_bold_pixel-7.ttf", 36, 0);
+  (*font)->score_font = al_load_font("resources/fonts/half_bold_pixel-7.ttf", 36, 0);
   must_init((*font)->score_font, "Score Font");
 
-  (*font)->title_font = al_load_font("../resources/fonts/half_bold_pixel-7.ttf", 55, 0);
+  (*font)->title_font = al_load_font("resources/fonts/half_bold_pixel-7.ttf", 55, 0);
   must_init((*font)->title_font, "Title Font");
 
-  (*font)->help_font = al_load_font("../resources/fonts/half_bold_pixel-7.ttf", 20, 0);
+  (*font)->help_font = al_load_font("resources/fonts/half_bold_pixel-7.ttf", 20, 0);
   must_init((*font)->help_font, "Help Font");
 }
 //Destroi variavel de fonte
@@ -65,7 +65,7 @@ void font_deinit(FONT_T **font){
 // --- BACKGROUND ---
 //Inicia background
 void background_init(ALLEGRO_BITMAP **bg){
-  *bg = al_load_bitmap("../resources/background/rock_bg.png");
+  *bg = al_load_bitmap("resources/background/rock_bg.png");
   must_init(*bg, "Background");
 }
 //Destroi background
@@ -118,7 +118,7 @@ void score_init(SCORE **score){
   (*score)->global_score = 0;
 
   //Inicia global score
-  FILE *filename = fopen("../resources/score/score_history.txt", "a+");
+  FILE *filename = fopen("resources/score/score_history.txt", "a+");
   must_init(filename, "Global Score");
 
   //Pega maior score
@@ -130,7 +130,7 @@ void score_init(SCORE **score){
 }
 //Destroi score
 void score_deinit(SCORE **score){
-  FILE *filename = fopen("../resources/score/score_history.txt", "a");
+  FILE *filename = fopen("resources/score/score_history.txt", "a");
   must_init(filename, "Save game score");
 
   if ( (*score)->local_score >= (*score)->global_score ){
@@ -178,7 +178,7 @@ void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_s
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 40, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 60, 30, ALLEGRO_ALIGN_CENTER, str_level);
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 10, 90, ALLEGRO_ALIGN_CENTER, str_quant);
-  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 60, 60, DISP_W/2.0 - 100, 84, 40, 40, 0);
+  al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 60, 60, DISP_W/2.0 - 110, 80, 50, 50, 0);
 }
 
 
@@ -186,24 +186,24 @@ void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_s
 //Inicia board
 JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   //Inicia vetor de sprites
-  candy_sprite[0]  = al_load_bitmap("../resources/sprites/rocks/rock1.png");   
-  candy_sprite[1]  = al_load_bitmap("../resources/sprites/rocks/rock2.png");   
-  candy_sprite[2]  = al_load_bitmap("../resources/sprites/rocks/rock3.png");   
-  candy_sprite[3]  = al_load_bitmap("../resources/sprites/rocks/rock4.png");   
-  candy_sprite[4]  = al_load_bitmap("../resources/sprites/rocks/rock5.png");   
-  candy_sprite[5]  = al_load_bitmap("../resources/sprites/rocks/rock6.png");   
-  candy_sprite[6]  = al_load_bitmap("../resources/sprites/rocks/special11.png");
-  candy_sprite[7]  = al_load_bitmap("../resources/sprites/rocks/special12.png");
-  candy_sprite[8]  = al_load_bitmap("../resources/sprites/rocks/special13.png");
-  candy_sprite[9]  = al_load_bitmap("../resources/sprites/rocks/special14.png");
-  candy_sprite[10] = al_load_bitmap("../resources/sprites/rocks/special15.png");
-  candy_sprite[11] = al_load_bitmap("../resources/sprites/rocks/special16.png");
-  candy_sprite[12] = al_load_bitmap("../resources/sprites/rocks/special21.png");
-  candy_sprite[13] = al_load_bitmap("../resources/sprites/rocks/special22.png");
-  candy_sprite[14] = al_load_bitmap("../resources/sprites/rocks/special23.png");
-  candy_sprite[15] = al_load_bitmap("../resources/sprites/rocks/special24.png");
-  candy_sprite[16] = al_load_bitmap("../resources/sprites/rocks/special25.png");
-  candy_sprite[17] = al_load_bitmap("../resources/sprites/rocks/special26.png");
+  candy_sprite[0]  = al_load_bitmap("resources/sprites/rocks/rock1.png");   
+  candy_sprite[1]  = al_load_bitmap("resources/sprites/rocks/rock2.png");   
+  candy_sprite[2]  = al_load_bitmap("resources/sprites/rocks/rock3.png");   
+  candy_sprite[3]  = al_load_bitmap("resources/sprites/rocks/rock4.png");   
+  candy_sprite[4]  = al_load_bitmap("resources/sprites/rocks/rock5.png");   
+  candy_sprite[5]  = al_load_bitmap("resources/sprites/rocks/rock6.png");   
+  candy_sprite[6]  = al_load_bitmap("resources/sprites/rocks/special11.png");
+  candy_sprite[7]  = al_load_bitmap("resources/sprites/rocks/special12.png");
+  candy_sprite[8]  = al_load_bitmap("resources/sprites/rocks/special13.png");
+  candy_sprite[9]  = al_load_bitmap("resources/sprites/rocks/special14.png");
+  candy_sprite[10] = al_load_bitmap("resources/sprites/rocks/special15.png");
+  candy_sprite[11] = al_load_bitmap("resources/sprites/rocks/special16.png");
+  candy_sprite[12] = al_load_bitmap("resources/sprites/rocks/special21.png");
+  candy_sprite[13] = al_load_bitmap("resources/sprites/rocks/special22.png");
+  candy_sprite[14] = al_load_bitmap("resources/sprites/rocks/special23.png");
+  candy_sprite[15] = al_load_bitmap("resources/sprites/rocks/special24.png");
+  candy_sprite[16] = al_load_bitmap("resources/sprites/rocks/special25.png");
+  candy_sprite[17] = al_load_bitmap("resources/sprites/rocks/special26.png");
 
   JEWEL **board;  //Altura BOARD_N+1 e comprimento BOARD_N
   board = malloc( sizeof(JEWEL *) * (BOARD_N+1) );            //Vetor de ponteiros
