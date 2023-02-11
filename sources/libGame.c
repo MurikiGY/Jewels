@@ -4,6 +4,7 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/bitmap.h>
 #include <allegro5/bitmap_draw.h>
+#include <stdio.h>
 
 // --- AUDIO ---
 //Inicia variaveis de audio
@@ -272,7 +273,20 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
     y_aux += JEWEL_SIZE;
   }
 
-  ////Inicia game over
+  //Carrega jogo anterior
+  FILE *filestream = fopen("resources/board/board_history.txt", "a+");
+  must_init(filestream, "Board init");
+
+  int tipo;
+  for (int i=0; i<BOARD_N+1 ;i++)
+    for (int j=0; j<BOARD_N ;j++){
+      fscanf(filestream, "%d", &tipo);
+      board[i][j].type = tipo;
+    }
+
+  fclose(filestream);
+
+  //Inicia game over
   //int count = 0;
   //for (int i=0; i<BOARD_N+1; i++)
   //  for (int j=0; j<BOARD_N ;j++){
@@ -290,6 +304,16 @@ void board_deinit(JEWEL ***board, ALLEGRO_BITMAP **candy_sprite){
   //Destroi vetor de sprites
   for (int i=0; i<3*JEWEL_TYPE_N ;i++)
     al_destroy_bitmap(candy_sprite[i]);
+
+  //Salva matriz
+  FILE *filestream = fopen("resources/board/board_history.txt", "w");
+  must_init(filestream, "Board init");
+
+  for(int i=0; i<BOARD_N+1 ;i++)
+    for(int j=0; j<BOARD_N ;j++)
+      fprintf(filestream, "%d\n", (*board)[i][j].type);
+
+  fclose(filestream);
 
   //Desaloca matriz
   free(*board[0]);

@@ -13,6 +13,11 @@ $(TARGET): $(OBJ)
 run: all
 	./$(TARGET)
 
+restart:
+	rm resources/score/score_history.txt
+	rm resources/mission/mission_history.txt
+	rm resources/board/board_history.txt
+
 clean:
 	-rm -f sources/*.o *~f
 

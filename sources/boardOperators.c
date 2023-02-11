@@ -15,6 +15,7 @@ void gen_new_board(GAME_ENGINE *game_set){
   while ( ok && !aux)
     ok = jewel_fall(game_set, 0, &aux);
 
+  //Carrega novo score e missao
   game_set->score->local_score = 0;
   game_set->mission->quant = 0;
   game_set->mission->level = 1;
@@ -594,11 +595,8 @@ int jewel_fall(GAME_ENGINE *game_set,int sound_flag, bool *game_over){
         *i_fall = 1;
         return 1;
       } else
-        if ( board_game_over(board) ){
-          printf("Game Over ein, ruim pra caramba\n");
-          *game_over = true;
-        } else 
-          global_state->board_state = BOARD_NEW_PLAY;
+        if ( board_game_over(board) )   *game_over = true;
+        else                            global_state->board_state = BOARD_NEW_PLAY;
       return 0;
 
       //Renderiza joias caindo na linha *i_fall
