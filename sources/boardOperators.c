@@ -14,6 +14,11 @@ void gen_new_board(GAME_ENGINE *game_set){
   int ok = jewel_fall(game_set, 0, &aux);
   while ( ok && !aux)
     ok = jewel_fall(game_set, 0, &aux);
+
+  game_set->score->local_score = 0;
+  game_set->mission->quant = 0;
+  game_set->mission->level = 1;
+  game_set->mission->type = between(0, JEWEL_TYPE_N);
 }
 
 
@@ -349,7 +354,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 1);                            //Escode joias a descer
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -365,7 +370,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 2);                            //Esconde joias a descer
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -381,7 +386,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 3);                            //Esconde joias a descer
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -397,7 +402,7 @@ int L_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 4);                            //Esconde joias a descer
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -421,7 +426,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 5);                            //Esconde joias
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -437,7 +442,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 6);
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -453,7 +458,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 7);
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -469,7 +474,7 @@ int T_test(GAME_ENGINE *game_set, int sound_flag){
         }
         hide_pieces(game_set, tipo, i, j, 8);
         quant += 5;
-        game_set->score->local_score += 500;
+        game_set->score->local_score += 500*game_set->mission->level;
         if ( sound_flag )
           al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         if ( game_set->mission->type == tipo )
@@ -501,7 +506,7 @@ int horizontal_test(GAME_ENGINE *game_set, int sound_flag){
             al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           if ( game_set->mission->type == tipo )
             game_set->mission->quant += k-j;
-          game_set->score->local_score += 100*(k-j);
+          game_set->score->local_score += 100*(k-j)*game_set->mission->level;
 
           //Gera joia especial
           if ( k-j == 5 ){
@@ -537,7 +542,7 @@ int vertical_test(GAME_ENGINE *game_set, int sound_flag){
             al_play_sample(game_set->audio->fall_snd_effect, 2.5, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
           if ( game_set->mission->type == tipo )
             game_set->mission->quant += k-i;
-          game_set->score->local_score += 100*(k-i);
+          game_set->score->local_score += 100*(k-i)*game_set->mission->level;
 
           //Gera joia especial
           if ( k-i == 5 ){

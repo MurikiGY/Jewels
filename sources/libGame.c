@@ -126,25 +126,36 @@ void score_init(SCORE **score){
   (*score)->global_score = 0;
 
   //Inicia global score
-  FILE *filename = fopen("resources/score/score_history.txt", "a+");
-  must_init(filename, "Global Score");
+  FILE *filestream = fopen("resources/score/score_history.txt", "a+");
+  must_init(filestream, "Global Score");
 
-  //Pega maior score
-  int score_max = 0;
-  while ( fscanf(filename, "%d", &score_max) != EOF )
-    if ( score_max >= (*score)->global_score )
-      (*score)->global_score = score_max;
-  fclose(filename);
+  int local = 0; int global = 0;
+  fscanf(filestream, "%d", &local);
+  fscanf(filestream, "%d", &global);
+
+  if ( local )    (*score)->local_score = local;
+  if ( global )   (*score)->global_score = global;
+
+  fclose(filestream);
 }
 //Destroi score
 void score_deinit(SCORE **score){
-  FILE *filename = fopen("resources/score/score_history.txt", "a");
-  must_init(filename, "Save game score");
+  FILE *filestream = fopen("resources/score/score_history.txt", "a");
+  must_init(filestream, "Save game score");
+  int local = 0; int global = 0;
+  fscanf(filestream, "%d", &local);
+  fscanf(filestream, "%d", &global);
+  fclose(filestream);
 
-  if ( (*score)->local_score >= (*score)->global_score ){
-    fprintf(filename, "%d\n",(*score)->local_score); }
+  filestream = fopen("resources/score/score_history.txt", "w");
+  must_init(filestream, "Save game score");
 
-  fclose(filename);
+  fprintf(filestream, "%d\n", (*score)->local_score);
+  if ( (*score)->global_score >= global ) fprintf(filestream, "%d\n", (*score)->global_score);
+  else                                    fprintf(filestream, "%d\n", global);
+
+  fclose(filestream);
+
   free(*score);
 }
 //Renderiza score
@@ -170,10 +181,32 @@ void mission_init(MISSION **mission){
 
   (*mission)->type = between(0, JEWEL_TYPE_N);
   (*mission)->quant = 0;
-  (*mission)->level = 0;
+  (*mission)->level = 1;
+
+  FILE *filestream = fopen("resources/mission/mission_history.txt", "a+");
+  must_init(filestream, "Mission init");
+
+  int tipo = 0; int quanti = 0; int nivel = 0;
+  fscanf(filestream, "%d", &tipo);
+  fscanf(filestream, "%d", &quanti);
+  fscanf(filestream, "%d", &nivel);
+
+  if ( tipo )     (*mission)->type = tipo;
+  if ( quanti )   (*mission)->quant = quanti;
+  if ( nivel )    (*mission)->level = nivel;
+
+  fclose(filestream);
 }
 // Destroi missão
 void mission_deinit(MISSION **mission){
+  FILE *filestream = fopen("resources/mission/mission_history.txt", "w");
+  must_init(filestream, "Mission deinit");
+
+  fprintf(filestream, "%d\n", (*mission)->type);
+  fprintf(filestream, "%d\n", (*mission)->quant);
+  fprintf(filestream, "%d\n", (*mission)->level);
+
+  fclose(filestream);
   free(*mission);
 }
 // Renderiz missão
@@ -181,10 +214,10 @@ void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_s
   char str_quant[20];
   char str_level[20];
   snprintf(str_quant, 20, "%d/10", mission->quant);
-  snprintf(str_level, 20, "%d", mission->level);
+  snprintf(str_level, 20, "%dx", mission->level);
 
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 40, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");
-  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 60, 30, ALLEGRO_ALIGN_CENTER, str_level);
+  al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 55, 30, ALLEGRO_ALIGN_CENTER, str_level);
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 + 10, 90, ALLEGRO_ALIGN_CENTER, str_quant);
   al_draw_scaled_bitmap(piece_sprite[mission->type], 0, 0, 60, 60, DISP_W/2.0 - 110, 80, 50, 50, 0);
 }
@@ -238,6 +271,17 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
     x_aux = 0;
     y_aux += JEWEL_SIZE;
   }
+
+  ////Inicia game over
+  //int count = 0;
+  //for (int i=0; i<BOARD_N+1; i++)
+  //  for (int j=0; j<BOARD_N ;j++){
+  //    board[i][j].type = count;
+  //    count++;
+  //      if ( count > 5 )
+  //      count = 0;
+  //  }
+  //board[1][6].type = 3;
 
   return board;
 }
