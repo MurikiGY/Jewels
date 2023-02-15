@@ -183,18 +183,21 @@ void mission_init(MISSION **mission){
   (*mission)->type = between(0, JEWEL_TYPE_N);
   (*mission)->quant = 0;
   (*mission)->level = 1;
+  (*mission)->top_level = 10;
 
   FILE *filestream = fopen("resources/mission/mission_history.txt", "a+");
   must_init(filestream, "Mission init");
 
-  int tipo = 0; int quanti = 0; int nivel = 0;
+  int tipo = 0; int quanti = 0; int nivel = 0; int top = 0;
   fscanf(filestream, "%d", &tipo);
   fscanf(filestream, "%d", &quanti);
   fscanf(filestream, "%d", &nivel);
+  fscanf(filestream, "%d", &top);
 
   if ( tipo )     (*mission)->type = tipo;
   if ( quanti )   (*mission)->quant = quanti;
   if ( nivel )    (*mission)->level = nivel;
+  if ( top )      (*mission)->top_level = top;
 
   fclose(filestream);
 }
@@ -206,6 +209,7 @@ void mission_deinit(MISSION **mission){
   fprintf(filestream, "%d\n", (*mission)->type);
   fprintf(filestream, "%d\n", (*mission)->quant);
   fprintf(filestream, "%d\n", (*mission)->level);
+  fprintf(filestream, "%d\n", (*mission)->top_level);
 
   fclose(filestream);
   free(*mission);
@@ -214,7 +218,7 @@ void mission_deinit(MISSION **mission){
 void mission_draw(MISSION *mission, ALLEGRO_FONT *font, ALLEGRO_BITMAP **piece_sprite){
   char str_quant[20];
   char str_level[20];
-  snprintf(str_quant, 20, "%d/10", mission->quant);
+  snprintf(str_quant, 20, "%d/%d", mission->quant, mission->top_level);
   snprintf(str_level, 20, "%dx", mission->level);
 
   al_draw_text(font, al_map_rgb(255, 255, 255), DISP_W/2.0 - 40, 30, ALLEGRO_ALIGN_CENTER, "LEVEL");

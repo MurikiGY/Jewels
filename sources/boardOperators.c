@@ -19,6 +19,7 @@ void gen_new_board(GAME_ENGINE *game_set){
   game_set->score->local_score = 0;
   game_set->mission->quant = 0;
   game_set->mission->level = 1;
+  game_set->mission->top_level = 10;
   game_set->mission->type = between(0, JEWEL_TYPE_N);
 }
 
@@ -581,10 +582,11 @@ int jewel_fall(GAME_ENGINE *game_set,int sound_flag, bool *game_over){
           game_set->score->global_score = game_set->score->local_score;
 
       //Atualiza missão
-      if ( game_set->mission->quant >= 10 ){
-            al_play_sample(game_set->audio->level_up_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+      if ( game_set->mission->quant >= game_set->mission->top_level ){
+        al_play_sample(game_set->audio->level_up_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         game_set->mission->quant = 0;
         game_set->mission->level += 1;
+        (game_set->mission->top_level)++;
         game_set->mission->type = between(0, JEWEL_TYPE_N);
       }
 

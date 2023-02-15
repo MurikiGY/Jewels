@@ -54,6 +54,7 @@ typedef struct mission {
   int type;                         //Type of the mission
   int quant;                        //Quantity
   int level;                        //Level
+  int top_level;
 } MISSION;
 
 
