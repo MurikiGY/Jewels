@@ -11,7 +11,7 @@
 
 // --- AUDIO ---
 typedef struct audio {
-  ALLEGRO_AUDIO_STREAM    *bg_music;              //Musica de fundo
+  ALLEGRO_SAMPLE          *bg_music;              //Musica de fundo
   ALLEGRO_SAMPLE          *fall_snd_effect;       //Efeito da queda
   ALLEGRO_SAMPLE          *special1_snd_effect;   //Explosão do especial 1
   ALLEGRO_SAMPLE          *special2_snd_effect;   //Explosão do especial 2

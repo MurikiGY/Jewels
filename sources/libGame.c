@@ -13,7 +13,7 @@ void audio_init(AUDIO_T **audio){
   *audio = malloc( sizeof(AUDIO_T));
   must_init(*audio, "Game Audio");
 
-  (*audio)->bg_music = al_load_audio_stream("resources/sound/Haggstrom.opus", 2, 2048);
+  (*audio)->bg_music = al_load_sample("resources/sound/Haggstrom.opus");
   must_init((*audio)->bg_music, "Background music");
 
   (*audio)->fall_snd_effect = al_load_sample("resources/sound/rock_fall.wav");
@@ -30,7 +30,7 @@ void audio_init(AUDIO_T **audio){
 }
 //Destroi variaveis de audio
 void audio_deinit(AUDIO_T **audio){
-  al_destroy_audio_stream((*audio)->bg_music);
+  al_destroy_sample((*audio)->bg_music);
   al_destroy_sample((*audio)->fall_snd_effect);
   al_destroy_sample((*audio)->special1_snd_effect);
   al_destroy_sample((*audio)->special2_snd_effect);

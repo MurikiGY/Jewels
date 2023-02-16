@@ -39,8 +39,9 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   game_set->board = board_init(game_set->piece_sprite);
   state_init(&game_set->global_state);
 
-  al_set_audio_stream_playmode(game_set->audio->bg_music, ALLEGRO_PLAYMODE_LOOP);
-  al_attach_audio_stream_to_mixer(game_set->audio->bg_music, al_get_default_mixer());
+  al_play_sample(game_set->audio->bg_music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, NULL);
+  //al_set_audio_stream_playmode(game_set->audio->bg_music, ALLEGRO_PLAYMODE_LOOP);
+  //al_attach_audio_stream_to_mixer(game_set->audio->bg_music, al_get_default_mixer());
 
   //Registradores de evento
   al_register_event_source(al_engine->queue, al_get_keyboard_event_source());
