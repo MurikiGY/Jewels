@@ -66,6 +66,7 @@ MOUSE *mouse_init(){
   must_init(al_install_mouse(), "Mouse");
   MOUSE *mouse = malloc( sizeof(MOUSE) );
   must_init(mouse, "Mouse");
+  mouse->x = -1; mouse->y = -1;
   mouse->x_clk = -1; mouse->y_clk = -1;
   mouse->i_clk = -1; mouse->j_clk = -1;
   mouse->x_rls = -1; mouse->y_rls = -1;
