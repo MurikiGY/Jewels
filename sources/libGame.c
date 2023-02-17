@@ -291,15 +291,15 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   fclose(filestream);
 
   //Inicia game over
-  //int count = 0;
-  //for (int i=0; i<BOARD_N+1; i++)
-  //  for (int j=0; j<BOARD_N ;j++){
-  //    board[i][j].type = count;
-  //    count++;
-  //      if ( count > 5 )
-  //      count = 0;
-  //  }
-  //board[1][6].type = 3;
+  int count = 0;
+  for (int i=0; i<BOARD_N+1; i++)
+    for (int j=0; j<BOARD_N ;j++){
+      board[i][j].type = count;
+      count++;
+        if ( count > 5 )
+        count = 0;
+    }
+  board[1][6].type = 3;
 
   return board;
 }

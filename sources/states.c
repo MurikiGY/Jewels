@@ -70,7 +70,7 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
              al_engine->mouse->x_clk < 3*BUFFER_W/4 &&
              al_engine->mouse->y_clk > 380          &&
              al_engine->mouse->y_clk < 440 ){
-          gen_new_board(game_set);
+          //gen_new_board(game_set);
           *game_status = GAME_PLAY;
           al_engine->mouse->x_clk = 0; al_engine->mouse->y_clk = 0;
           done = true; }
@@ -216,7 +216,7 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
         al_draw_filled_rounded_rectangle(50, 50, DISP_W-50, DISP_H-50, 20, 20, al_map_rgba_f(0, 0, 0, 0.8));
         al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 150, ALLEGRO_ALIGN_CENTER, "GAME OVER");
         al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 250, ALLEGRO_ALIGN_CENTER, "Parabéns");
-        al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 300, ALLEGRO_ALIGN_CENTER,  "Conseguiu fazer merda");
+        al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 300, ALLEGRO_ALIGN_CENTER,  "Esperava mais de voce...");
         al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 410, ALLEGRO_ALIGN_CENTER, "NEW GAME");
         al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 560, ALLEGRO_ALIGN_CENTER, "MENU");
         al_draw_rounded_rectangle(DISP_W/2.0-170, 395, DISP_W/2.0+170, 450, 20, 20, al_map_rgb(255, 255, 255), 3);
