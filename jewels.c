@@ -16,23 +16,18 @@ int main (){
   while ( game_status != FINISH ){
     switch ( game_status ){
       case LOAD_GAME:
-        printf("Load Game\n");
         load_game(&game_status, &al_engine, &game_set); 
         break;
       case GAME_MENU:
-        printf("Game Menu\n");
         game_menu(&game_status, &al_engine, &game_set); 
         break;
       case GAME_PLAY:
-        printf("Game Play\n");
         game_play(&game_status, &al_engine, &game_set); 
         break;
       case GAME_HELP:
-        printf("Game Help\n");
         game_help(&game_status, &al_engine, &game_set); 
         break;
       case GAME_OVER:
-        printf("Game Over\n");
         game_over(&game_status, &al_engine, &game_set);
         break;
       default: break;

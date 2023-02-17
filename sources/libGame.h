@@ -12,10 +12,12 @@
 // --- AUDIO ---
 typedef struct audio {
   ALLEGRO_SAMPLE          *bg_music;              //Musica de fundo
+  ALLEGRO_SAMPLE_ID       bg_id;
   ALLEGRO_SAMPLE          *fall_snd_effect;       //Efeito da queda
   ALLEGRO_SAMPLE          *special1_snd_effect;   //Explosão do especial 1
   ALLEGRO_SAMPLE          *special2_snd_effect;   //Explosão do especial 2
   ALLEGRO_SAMPLE          *level_up_sound;
+  ALLEGRO_SAMPLE	  *easter;
 } AUDIO_T;
 
 
@@ -112,6 +114,8 @@ typedef struct engine_game {
   JEWEL                   **board;                //Tabuleiro 
   ALLEGRO_BITMAP          *piece_sprite[18];      //Sprites de peças
   STATES                  global_state;           //Variaveis de estado
+  bool 			  give_up;
+  bool 			  game_over;
 } GAME_ENGINE;
 
 

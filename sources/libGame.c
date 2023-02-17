@@ -27,6 +27,9 @@ void audio_init(AUDIO_T **audio){
 
   (*audio)->level_up_sound = al_load_sample("resources/sound/level_up_sound.wav");
   must_init((*audio)->level_up_sound, "Level up sound");
+
+  (*audio)->easter = al_load_sample("resources/sound/giveup.opus");
+  must_init((*audio)->easter, "Rick Astley");
 }
 //Destroi variaveis de audio
 void audio_deinit(AUDIO_T **audio){
@@ -35,6 +38,7 @@ void audio_deinit(AUDIO_T **audio){
   al_destroy_sample((*audio)->special1_snd_effect);
   al_destroy_sample((*audio)->special2_snd_effect);
   al_destroy_sample((*audio)->level_up_sound);
+  al_destroy_sample((*audio)->easter);
   free(*audio);
 }
 
@@ -291,15 +295,15 @@ JEWEL **board_init (ALLEGRO_BITMAP **candy_sprite){
   fclose(filestream);
 
   //Inicia game over
-  int count = 0;
-  for (int i=0; i<BOARD_N+1; i++)
-    for (int j=0; j<BOARD_N ;j++){
-      board[i][j].type = count;
-      count++;
-        if ( count > 5 )
-        count = 0;
-    }
-  board[1][6].type = 3;
+  //int count = 0;
+  //for (int i=0; i<BOARD_N+1; i++)
+  //  for (int j=0; j<BOARD_N ;j++){
+  //    board[i][j].type = count;
+  //    count++;
+  //      if ( count > 5 )
+  //      count = 0;
+  //  }
+  //board[1][6].type = 3;
 
   return board;
 }

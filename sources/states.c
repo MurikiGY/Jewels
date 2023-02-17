@@ -38,8 +38,10 @@ void load_game(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
   mission_init(&game_set->mission);
   game_set->board = board_init(game_set->piece_sprite);
   state_init(&game_set->global_state);
+  game_set->give_up = false;
+  game_set->game_over = false;
 
-  al_play_sample(game_set->audio->bg_music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, NULL);
+  al_play_sample(game_set->audio->bg_music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, &game_set->audio->bg_id);
   //al_set_audio_stream_playmode(game_set->audio->bg_music, ALLEGRO_PLAYMODE_LOOP);
   //al_attach_audio_stream_to_mixer(game_set->audio->bg_music, al_get_default_mixer());
 
@@ -70,7 +72,8 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
              al_engine->mouse->x_clk < 3*BUFFER_W/4 &&
              al_engine->mouse->y_clk > 380          &&
              al_engine->mouse->y_clk < 440 ){
-          //gen_new_board(game_set);
+	  game_set->game_over = false;
+          gen_new_board(game_set);
           *game_status = GAME_PLAY;
           al_engine->mouse->x_clk = 0; al_engine->mouse->y_clk = 0;
           done = true; }
@@ -144,7 +147,6 @@ void game_menu(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
 void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *game_set){
   bool done = false;        //Fim de jogo
   bool redraw = true;       //Renderizar
-  bool game_over = false;
   ALLEGRO_EVENT event;
 
   while(1){
@@ -153,23 +155,35 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       case ALLEGRO_EVENT_TIMER:
         //Update functions
         stars_update(game_set->stars);
-        if ( !game_over )
-          board_update(game_status, al_engine, game_set, &game_over);
-        else {
+        if ( !game_set->game_over ){
+          board_update(game_status, al_engine, game_set, &game_set->game_over);
+
+	  if ( (game_set->mission->level%2) == 0 && !game_set->give_up ){
+	    //Give_up button
+	    //yes
+	    if ( al_engine->mouse->x_clk>350 && al_engine->mouse->x_clk<410 &&
+	         al_engine->mouse->y_clk>5   && al_engine->mouse->y_clk<25 ){
+	      game_set->game_over = true; }
+	    //no
+	    if ( al_engine->mouse->x_clk>430 && al_engine->mouse->x_clk<480 &&
+	         al_engine->mouse->y_clk>5   && al_engine->mouse->y_clk<25 ){
+	      game_set->give_up = true;
+	      al_stop_sample(&game_set->audio->bg_id);
+	      al_play_sample(game_set->audio->easter, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, NULL); }
+	  }
+	} else {
+	
           //Game over to New game
-          if ( al_engine->mouse->x_clk>DISP_W/2.0-200 &&
-               al_engine->mouse->x_clk<DISP_W/2.0+200 &&
-               al_engine->mouse->y_clk>395            &&
-               al_engine->mouse->y_clk<450 ){
-          game_over = false;
-          gen_new_board(game_set); }
+          if ( al_engine->mouse->x_clk>DISP_W/2.0-200 && al_engine->mouse->x_clk<DISP_W/2.0+200 &&
+               al_engine->mouse->y_clk>395            && al_engine->mouse->y_clk<450 ){
+            game_set->game_over = false;
+            gen_new_board(game_set); }
+
           //Game over to Menu
-          if ( al_engine->mouse->x_clk>DISP_W/2.0-200 &&
-               al_engine->mouse->x_clk<DISP_W/2.0+200 &&
-               al_engine->mouse->y_clk>545            &&
-               al_engine->mouse->y_clk<600 ){
-          al_engine->mouse->x_clk = 0; al_engine->mouse->y_clk = 0;
-          *game_status = GAME_MENU; done = true; }
+          if ( al_engine->mouse->x_clk>DISP_W/2.0-200 && al_engine->mouse->x_clk<DISP_W/2.0+200 &&
+               al_engine->mouse->y_clk>545            && al_engine->mouse->y_clk<600 ){
+            al_engine->mouse->x_clk = 0; al_engine->mouse->y_clk = 0;
+            *game_status = GAME_MENU; done = true; }
         }
 
         //Back button
@@ -208,11 +222,13 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
       score_draw(game_set->score, game_set->font->score_font);
       mission_draw(game_set->mission, game_set->font->score_font, game_set->piece_sprite);
       board_draw(game_set->board, game_set->piece_sprite);
+
       //Back button
       al_draw_filled_rounded_rectangle(30, 37, 75, 53, 5, 5, al_map_rgb(204, 102, 0));
       al_draw_filled_triangle(10, 45, 35, 25, 35, 65, al_map_rgb(204, 102, 0));
+
       //Game over
-      if ( game_over ){
+      if ( game_set->game_over ){
         al_draw_filled_rounded_rectangle(50, 50, DISP_W-50, DISP_H-50, 20, 20, al_map_rgba_f(0, 0, 0, 0.8));
         al_draw_text(game_set->font->title_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 150, ALLEGRO_ALIGN_CENTER, "GAME OVER");
         al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 250, ALLEGRO_ALIGN_CENTER, "Parabéns");
@@ -220,8 +236,12 @@ void game_play(GAME_STATE *game_status, ALLEGRO_ENGINE *al_engine, GAME_ENGINE *
         al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 410, ALLEGRO_ALIGN_CENTER, "NEW GAME");
         al_draw_text(game_set->font->score_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 560, ALLEGRO_ALIGN_CENTER, "MENU");
         al_draw_rounded_rectangle(DISP_W/2.0-170, 395, DISP_W/2.0+170, 450, 20, 20, al_map_rgb(255, 255, 255), 3);
-        al_draw_rounded_rectangle(DISP_W/2.0-170, 545, DISP_W/2.0+170, 600, 20, 20, al_map_rgb(255, 255, 255), 3);
-      }
+        al_draw_rounded_rectangle(DISP_W/2.0-170, 545, DISP_W/2.0+170, 600, 20, 20, al_map_rgb(255, 255, 255), 3); }
+
+      //Give up
+      if ( (game_set->mission->level%2) == 0 && !game_set->give_up )
+        al_draw_text(game_set->font->help_font, al_map_rgb(255, 255, 255), DISP_W/2.0, 5, ALLEGRO_ALIGN_CENTER,  "give up? [ yes / no ]");
+
 
       display_post_draw(&al_engine->buffer, &al_engine->display); redraw = false;
     } //If (done)
